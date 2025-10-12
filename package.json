@@ -1,6 +1,9 @@
 {
   "name": "base.js",
-  "module": "src/index.mts",
+  "module": "src/main.mts",
+  "files": [
+    "src/*.mts"
+  ],
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",

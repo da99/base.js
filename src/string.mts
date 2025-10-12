@@ -50,7 +50,6 @@ export function split_whitespace(x: string) {
   // returned array. So no need to filter out null values.
   // We just need to filter out empty strings.
   return x
-  .trim()
   .split(WHITESPACE_PATTERN)
   .map(trim)
   .filter(length_not_zero);
