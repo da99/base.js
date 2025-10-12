@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+#
+set -u -e -o pipefail
+
+
+case "$*" in
+  "-h"|"--help"|"help")
+    echo "__ -h|--help|help     -- This message."
+    echo "__ test               -- Run the tests in spec/ directory."
+    ;;
+
+  test)
+    set -x
+    bunx vitest --dom --testNamePattern 'spec/*.spec.mts'
+    ;;
+
+  *)
+    echo "!!! Unknown command: $*" >&2
+    exit 1
+    ;;
+esac

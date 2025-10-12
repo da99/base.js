@@ -1,5 +1,8 @@
 # base.js
 Personal helpers for .js/.mts projects.
 
+# Setup
+`bun install`
+
 # Tests
-`vitest`
+`bin/__ test`

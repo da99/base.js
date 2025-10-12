@@ -1,5 +1,5 @@
 
-import { IS_WINDOW, IS_DEV } from './IS.mts'
+import { IS_WINDOW, IS_DEV } from './is.mts'
 
 export function log(...args: any[]) {
   if (!IS_WINDOW || IS_DEV)
