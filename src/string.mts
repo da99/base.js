@@ -1,5 +1,5 @@
 
-export const WHITESPACE_PATTERN     = /\s+/;
+export const WHITESPACE_PATTERN     = /\s+/g;
 
 export const BEGIN_DOT_SLASH        = /^\.+\/+/;
 export const END_SLASH              = /\/+$/;
