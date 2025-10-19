@@ -18,14 +18,14 @@ export const status = {
     return e;
   },
   reset: function(e_or_id: string | HTMLElement): HTMLElement | null {
-    const ele = (typeof e_or_id === 'string') ? document.getElementById(e_or_id) : e_or_id as HTMLElement;
+    const ele = (typeof e_or_id === 'string') ? document.querySelector(e_or_id) : e_or_id as HTMLElement;
     if (!ele)
       return ele;
 
     for (const s of CSS_States)
       ele.classList.remove(s);
 
-    return ele;
+    return ele as HTMLElement;
   }
 };
 

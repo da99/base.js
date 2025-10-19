@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: 'on.js',
+    name: 'base.js',
     root: './spec',
     environment: 'happy-dom',
     setupFiles: [],

@@ -55,10 +55,10 @@ test('runs "before/main/after" handlers in the right order', function () {
   expect(stages).toStrictEqual(['before', 'main', 'after']);
 }); // test
 
-test('passes data to handlers', function () {
+test('passes data to handlers via event.detail', function () {
   let y;
   const x = {"name": "my data"};
-  on("dataly", function (data, _evt) { y = data.name; })
+  on("dataly", function (evt) { y = evt.detail.name; })
   dispatch('dataly', x);
 
   expect(y).toBe(x.name);
