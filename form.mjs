@@ -38,83 +38,86 @@ function POST(form_ele, action) {
 };
 
 function fetch_form(method, form_ele) {
-    const f_data = data(form_ele);
-    const action = form_ele.getAttribute('action') || '/';
-    const url    = path_to_url(form_ele.getAttribute('action'));
+  const f_data = data(form_ele);
+  const action = form_ele.getAttribute('action') || '/';
+  const url    = path_to_url(form_ele.getAttribute('action'));
 
-    const fetch_data = {
-      method,
-      cache         : "no-cache",
-      referrerPolicy: "no-referrer",
-      headers       : {
-        "Content-Type": "application/json",
-        X_SENT_FROM: form_ele.id
-      },
-      body: JSON.stringify(f_data || {})
-    };
+  const fetch_data = {
+    method,
+    cache         : "no-cache",
+    referrerPolicy: "no-referrer",
+    headers       : {
+      "Content-Type": "application/json",
+      X_SENT_FROM: form_ele.id
+    },
+    body: JSON.stringify(f_data || {})
+  };
 
-    const req_origin = {
-      request: fetch_data,
-      dom_id : form_ele.id,
-      action : raw_action
-    };
+  const request = {
+    data   : fetch_data,
+    dom_id : form_ele.id,
+    action : raw_action
+  };
 
-    dispatch(`request`, req_origin);
+  dispatch('request', request);
 
-    style_status.update(dom_id, 'loading');
+  style_status.update(dom_id, 'loading');
 
-    setTimeout(async () => {
-      fetch(url, fetch_data)
-      .then((resp) => response(req_origin, resp))
-      .catch((err) => network_error(err, req_origin));
-    }, 450);
+  setTimeout(async () => {
+    fetch(url, fetch_data)
+      .then((response) => run_response({request, response}))
+      .catch((error) => run_network_error({error, request}));
+  }, 450);
 
-    return true;
-}
+  return true;
+} // fetch_form
 
-async function response(req, raw_resp) {
-  if (!raw_resp.ok)
-    return dispatch.server_error(req, raw_resp);
+async function run_response(data) {
+  const {request, response} = data;
+  if (!response.ok) {
+    run_server_error(data);
+    return data;
+  }
 
-  const resp = (await raw_resp.json());
+  const json = (await response.json());
 
-  const x_sent_from = raw_resp.headers.get('X_SENT_FROM');
+  const x_sent_from = response.headers.get('X_SENT_FROM');
 
   if (!x_sent_from) {
-    warn(`X_SENT_FROM key not found in headers: ${Array.from(raw_resp.headers.keys()).join(', ')}`);
+    warn(`X_SENT_FROM key not found in headers: ${Array.from(response.headers.keys()).join(', ')}`);
     return resp;
   }
 
-  if(x_sent_from !== req.dom_id) {
-    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${req.dom_id}`);
-    return resp;
+  if(x_sent_from !== request.dom_id) {
+    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${request.dom_id}`);
+    return json;
   }
 
-  const e = document.getElementById(req.dom_id);
+  const e = document.getElementById(request.dom_id);
 
-  dispatch('response', {response: resp, request: req});
+  dispatch('response', {json, ...data});
+
+
+  const status = json.status;
+  const new_data = {status, json, ...data};
 
   if (e)
-    style_status.update(e, resp.status);
+    style_status.update(e, json.status);
 
-  return dispatch.status(resp, req);
-}
+  warn(`STATUS: ${status}: ${request.dom_id} ${request.action}`);
+  dispatch('status', new_data);
+  dispatch(response.status, new_data);
 
-function status(resp, req) {
-  const status = resp.status;
-  warn(`STATUS: ${status}: ${req.dom_id} ${req.action}`);
-  const detail = {detail: {status, response: resp, request: req}};
-  style_status.update(req.dom_id, status);
-  dispatch('status', detail);
-}
+  return data;
+} // async run_response
 
-function server_error(req, raw_resp) {
-  warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
+function run_server_error(data) {
+  const {request, response} = data;
+  warn(`!!! Server Error: ${response.status} - ${response.statusText}`);
 
-  const detail = {detail: {request: req, response: raw_resp}};
-  dispatch('server_error', detail)
+  dispatch('server_error', data);
 
-  const e = document.getElementById(req.dom_id);
+  const e = document.getElementById(request.dom_id);
   if (e) {
     style_status.update(e, 'server_error');
     return true;
@@ -123,12 +126,12 @@ function server_error(req, raw_resp) {
   return false;
 }
 
-function network_error(error, req) {
-  warn(`!!! Network error: ${req.dom_id} ${req.action}: ${error.message}`);
+function run_network_error(data) {
+  const {error, request} = data;
+  warn(`!!! Network error: ${request.dom_id} ${request.action}: ${error.message}`);
   warn(error);
 
-  const detail = {detail: {error, request}};
-  dispatch('network_error', detail);
+  dispatch('network_error', data);
 
   const e = document.getElementById(request.dom_id);
   if (e) {
