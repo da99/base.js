@@ -1,10 +1,4 @@
 
-export const use = {
-  default_forms() {
-    return document.body.addEventListener('click', form.on_click_button);
-  } // export function
-};
-
 export function fragment(f: ((x: Element_Function) => void)): DocumentFragment {
   let dom_fragment = document.createDocumentFragment();
 
