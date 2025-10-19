@@ -6,12 +6,20 @@ set -u -e -o pipefail
 
 case "$*" in
   "-h"|"--help"|"help")
-    echo "__ -h|--help|help     -- This message."
-    echo "__ test               -- Run the tests in spec/ directory."
+    echo "$0 -h|--help|help     -- This message."
+    echo "$0 test               -- Run the tests in spec/ directory."
+    echo "$0 setup              -- Install and update dependencies."
+    ;;
+
+  "setup")
+    set -x
+    bun install
+    bun update
     ;;
 
   test)
     set -x
+    # bun run --hot spec/serve.js
     bunx vitest --dom --testNamePattern 'spec/*.spec.mts'
     ;;
 
@@ -20,3 +28,21 @@ case "$*" in
     exit 1
     ;;
 esac
+
+  # "build")
+  #   cd "$(dirname "$(realpath "$0")")"/..
+  #   echo "=== $PWD"
+  #   set -x
+  #   rm -rf build
+  #   mkdir build
+  #   bun build --target browser src/html.mts --outfile build/html.mjs
+  #   set +x
+  #   tree build
+  #   ;;
+  #
+  # "build test")
+  #   set -x
+  #   rm -rf build
+  #   mkdir build
+  #   bun build --target browser spec/test.js --outdir build
+  #   ;;

@@ -1,61 +1,42 @@
 
-const RESET = "\x1b[0m";
 
 // Colors from: https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
-const DA_Spec = {
-  "BOLD" : "\x1b[1m",
-  "RED": "\x1b[31m",
-  "GREEN": "\x1b[32m",
-  "YELLOW": "\x1b[33m"
+export const CODES = {
+"BOLD"   : "\x1b[1m",
+"RED"    : "\x1b[31m",
+"GREEN"  : "\x1b[32m",
+"YELLOW" : "\x1b[33m",
+'RESET'  : "\x1b[0m"
 }; // const
 
-const WHITESPACE = /(\s+)/; 
+const WHITESPACE = /(\s+)/g;
 
 function standard_keys(raw : string) {
   return raw.split(WHITESPACE).filter((e) => e !== "" );
 }
 
-function color(color, ...args) {
-  const new_color = standard_keys(color).map((x) => DA_Spec[x]).join(" ");
-  return `${new_color}${args.join(" ")}${RESET}`;
+function color(color: string, ...args: string[]) {
+  const new_color = standard_keys(color).map((x: string) => CODES[x as keyof typeof CODES]).join(" ");
+  return `${new_color}${args.join(" ")}${CODES.RESET}`;
 }
 
-function bold(txt) {
+function bold(txt: string) {
   return color("BOLD", txt);
 }
 
-function green(txt) {
+function green(txt: string) {
   return color("GREEN", txt);
 }
 
-function red(txt) {
+function red(txt: string) {
   return color("RED", txt);
 }
 
-function yellow(txt) {
+function yellow(txt: string) {
   return color("YELLOW", txt);
 }
 
-green.bold  = function (...args) { return color("GREEN BOLD", args); };
-red.bold    = function (...args) { return color("RED BOLD", args); };
-yellow.bold = function (...args) { return color("YELLOW BOLD", args); };
-
-export function describe(name, f) {
-  console.error(bold("Describe: ") + yellow(name));
-  f();
-} // function
-
-export function it(name, f) {
-
-  try {
-    f();
-    console.error(bold("  - ") + green.bold("✓ " + name));
-  } catch (err) {
-    console.error(bold("  - ") + red.bold("✗ " + name));
-    throw err;
-  }
-} // function
-
-import { strict as assert } from "assert";
-export { assert };
+green.bold  = function (...args: string[]) { return color("GREEN BOLD", ...args); };
+red.bold    = function (...args: string[]) { return color("RED BOLD", ...args); };
+yellow.bold = function (...args: string[]) { return color("YELLOW BOLD", ...args); };
 
