@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "base.js": "github:da99/base.js#main",
-    "@types/bun": "latest",
-    "@types/node": "latest",
-    "jsdom": "latest"
-  }
-}
