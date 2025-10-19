@@ -8,20 +8,6 @@ const THIS_ORIGIN = (new URL(window.location.href)).origin;
 
 // import type { Request_Origin, Response_Origin } from './types.mts';
 
-export function data(form_ele) {
-  const raw_data = new FormData(form_ele);
-  const data = {};
-  for (let [k,v] of raw_data.entries()) {
-    if (data.hasOwnProperty(k)) {
-      if(!Array.isArray(data[k]))
-        data[k] = [data[k]];
-      data[k].push(v);
-    } else
-      data[k] = v;
-  }
-  return data;
-} // export function
-
 export function path_to_url(x) {
   if (typeof x !== 'string')
     return false;
@@ -29,42 +15,51 @@ export function path_to_url(x) {
   return new URL(x, THIS_ORIGIN);
 } // func
 
-function GET(form_ele, action) {
-    return fetch_form('GET', form_ele);
-};
+export function to_data(form_ele) {
+  const raw_data = new FormData(form_ele);
+  const fin = {};
+  for (let [k,v] of raw_data.entries()) {
+    if (fin.hasOwnProperty(k)) {
+      if(!Array.isArray(fin[k]))
+        fin[k] = [fin[k]];
+      fin[k].push(v);
+    } else
+      fin[k] = v;
+  }
+  return fin;
+} // export function
 
-function POST(form_ele, action) {
-    return fetch_form('POST', form_ele);
-};
-
+// function GET(form_ele) { return fetch_form('GET', form_ele); };
+function POST(form_ele) { return fetch_form('POST', form_ele); };
 function fetch_form(method, form_ele) {
-  const f_data = data(form_ele);
+  const f_data = to_data(form_ele);
   const action = form_ele.getAttribute('action') || '/';
   const url    = path_to_url(form_ele.getAttribute('action'));
 
-  const fetch_data = {
-    method,
-    cache         : "no-cache",
-    referrerPolicy: "no-referrer",
-    headers       : {
-      "Content-Type": "application/json",
-      X_SENT_FROM: form_ele.id
-    },
-    body: JSON.stringify(f_data || {})
-  };
+  if (!form_ele.id)
+    upsert_id(form_ele);
 
   const request = {
-    data   : fetch_data,
     dom_id : form_ele.id,
-    action : raw_action
+    action : raw_action,
+    fetch  : {
+      method,
+      cache         : "no-cache",
+      referrerPolicy: "no-referrer",
+      headers       : {
+        "Content-Type": "application/json",
+        X_SENT_FROM: form_ele.id
+      },
+      body: JSON.stringify(f_data || {})
+    }
   };
 
-  dispatch('request', request);
+  dispatch.request(request.dom_id, request);
 
-  style_status.update(dom_id, 'loading');
+  style_status.update(form_ele.id, 'loading');
 
   setTimeout(async () => {
-    fetch(url, fetch_data)
+    fetch(url, request.fetch)
       .then((response) => run_response({request, response}))
       .catch((error) => run_network_error({error, request}));
   }, 450);
@@ -95,7 +90,7 @@ async function run_response(data) {
 
   const e = document.getElementById(request.dom_id);
 
-  dispatch('response', {json, ...data});
+  dispatch.response(request.dom_id, {json, ...data});
 
 
   const status = json.status;
@@ -105,8 +100,8 @@ async function run_response(data) {
     style_status.update(e, json.status);
 
   warn(`STATUS: ${status}: ${request.dom_id} ${request.action}`);
-  dispatch('status', new_data);
-  dispatch(response.status, new_data);
+  dispatch.status(request.dom_id, new_data);
+  dispatch(`${response.status} ${dom_id}`, new_data);
 
   return data;
 } // async run_response
@@ -158,12 +153,8 @@ export function init() {
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    if (!form_ele.id)
-      upsert_id(form_ele);
-
     POST(form_ele);
-
     return false;
-  });
+  }); // attachEventListener
 } //
 

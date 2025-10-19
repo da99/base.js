@@ -5,9 +5,7 @@ const SPACE = ' ';
 function standard_name(x) { return x.trim().replaceAll(WHITESPACE, SPACE); }
 
 export function on(raw_name, f) {
-  document.body.addEventListener(standard_name(raw_name), function(evt) {
-    f(evt.detail, evt);
-  });
+  document.body.addEventListener(standard_name(raw_name), f);
 }
 
 on.before        = function (model_name, f) { return on(`before ${model_name}`, f); };
@@ -23,10 +21,10 @@ on.try_again     = function (model_name, f) { return on(`try_again ${model_name}
 on.not_yet       = function (model_name, f) { return on(`not_yet ${model_name}`,   f); };
 on.expired       = function (model_name, f) { return on(`expired ${model_name}`,   f); };
 
-export function dispatch(raw_name, the_data) {
+export function dispatch(raw_name, data) {
   const model_name = standard_name(raw_name);
-  const asterisk   = {detail: {name: model_name, data: the_data}};
-  const main       = {detail: the_data};
+  const asterisk   = {detail: {model_name, ...data}};
+  const main       = {detail: data};
 
   document.body.dispatchEvent(new CustomEvent(`before *`, asterisk));
   document.body.dispatchEvent(new CustomEvent(`before ${model_name}`, main));
@@ -39,3 +37,16 @@ export function dispatch(raw_name, the_data) {
 
 
 
+dispatch.before        = function (model_name, f) { return dispatch(`before ${model_name}`, f); };
+dispatch.after         = function (model_name, f) { return dispatch(`after ${model_name}`,  f); };
+dispatch.network_error = function (model_name, f) { return dispatch(`network_error ${model_name}`, f); };
+dispatch.server_error  = function (model_name, f) { return dispatch(`server_error ${model_name}`, f); };
+dispatch.submit        = function (model_name, f) { return dispatch(`submit ${model_name}`,    f); };
+dispatch.request       = function (model_name, f) { return dispatch(`request ${model_name}`,   f); };
+dispatch.response      = function (model_name, f) { return dispatch(`response ${model_name}`,  f); };
+dispatch.ok            = function (model_name, f) { return dispatch(`ok ${model_name}`,        f); };
+dispatch.invalid       = function (model_name, f) { return dispatch(`invalid ${model_name}`,   f); };
+dispatch.try_again     = function (model_name, f) { return dispatch(`try_again ${model_name}`, f); };
+dispatch.not_yet       = function (model_name, f) { return dispatch(`not_yet ${model_name}`,   f); };
+dispatch.expired       = function (model_name, f) { return dispatch(`expired ${model_name}`,   f); };
+dispatch.status        = function (model_name, f) { return dispatch(`status ${model_name}`,   f); };
