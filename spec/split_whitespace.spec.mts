@@ -1,6 +1,6 @@
 
 import { expect, test } from "vitest";
-import { split_whitespace } from "../src/string.mts";
+import { split_whitespace } from "../string.mts";
 
 test("removes whitespace from beginning, middle, and end", function () {
   const str = "  a  \r\n \t b    c ";

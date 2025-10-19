@@ -1,6 +1,6 @@
 
 import { expect, test } from "vitest";
-import { is_plain_object } from "../src/is.mts";
+import { is_plain_object } from "../is.mts";
 
 test('should return true when prototype is Object protoype', function () {
   expect(is_plain_object({a: 'true'})).toBe(true);

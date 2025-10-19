@@ -1,6 +1,6 @@
 
 import { expect, test } from "vitest";
-import { is_urlish } from '../src/is.mts';
+import { is_urlish } from '../is.mts';
 
 test('should return true when string starts with http://', function () {
   expect(is_urlish('http://k.com.com')).toBe(true);
