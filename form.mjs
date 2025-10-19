@@ -1,9 +1,13 @@
 
-import { dispatch } from 'on.js';
+import { dispatch } from './on.js';
+import { upsert_id } from './dom.mts';
+import { css } from './css.mts';
+import { warn } from './log.mts';
 
 const THIS_ORIGIN = (new URL(window.location.href)).origin;
 
-import { id as dom_id } from './dom.mts';
+// import type { Request_Origin, Response_Origin } from './types.mts';
+
 import { http } from './http.mts';
 import { css } from './css.mts';
 import { warn } from 'base.js/src/log.mts';
@@ -65,27 +69,6 @@ function fetch_form(method, form_ele) {
 
     return true;
 };
-
-document.body.attachEventListener('click', function (evt) {
-  const form_ele = evt.target;
-
-  if (form_ele.tagName !== 'FORM')
-    return false;
-
-  if (form_ele.getAttribute('action').indexOf('/') !== 0)
-    return false;
-
-  evt.preventDefault();
-  evt.stopPropagation();
-  evt.stopImmediatePropagation();
-
-  if (!form_ele.id)
-    dom_id.upsert(form_ele);
-
-  POST(form_ele);
-
-  return false;
-});
 
 form: {
   submit(e: HTMLFormElement) {
@@ -181,3 +164,29 @@ form: {
 
     return false;
   } // === function
+
+
+export function init() {
+  document.body.attachEventListener('click', function (evt) {
+    const ele = evt.target;
+    const form_ele = ele && ele.tagName == 'BUTTON' && ele.type == 'submit' && ele.closest('FORM')
+
+    if (!form_ele)
+      return false;
+
+    if (form_ele.getAttribute('action').indexOf('/') !== 0)
+      return false;
+
+    evt.preventDefault();
+    evt.stopPropagation();
+    evt.stopImmediatePropagation();
+
+    if (!form_ele.id)
+      upsert_id(form_ele);
+
+    POST(form_ele);
+
+    return false;
+  });
+} //
+

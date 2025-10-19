@@ -42,23 +42,22 @@ function __plus_one(): number {
   return new_id;
 }
 
-export const id = {
+export function unique_id() {
   // From: https://twitter.com/SimonHoiberg/status/1503295286264967174
-  unique() {
-    return Date.now().toString(36) + Math.floor(Math.random() * 100).toString();
-  }, // export function
+  return Date.now().toString(36) + Math.floor(Math.random() * 100).toString();
+} // export function
 
-  // Gets id attribute of element.
-  // Creates an id if it is missing.
-  upsert(e: Element): string {
-    const id = e.getAttribute('id');
-    if (id)
-      return id;
-    const new_id = `${e.tagName}_${__plus_one()}`
-    e.setAttribute('id', new_id);
-    return new_id;
-  }
-};
+
+// Gets id attribute of element.
+// Creates an id if it is missing.
+export function upsert_id(e: Element): string {
+  const id = e.getAttribute('id');
+  if (id)
+    return id;
+  const new_id = `${e.tagName}_${__plus_one()}`
+  e.setAttribute('id', new_id);
+  return new_id;
+}
 
 
 
