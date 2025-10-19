@@ -1,30 +1,9 @@
 
-import { id as dom_id } from './dom.mts';
-import { form } from './form.mts';
-import { http } from './http.mts';
-import { css } from './css.mts';
-import { warn } from 'base.js/src/log.mts';
-
-import type { Request_Origin, Response_Origin } from './types.mts';
 
 
 export const dispatch = {
 
   form: {
-    submit(e: HTMLFormElement) {
-      const action_url = e.getAttribute('action') || '';
-      const form_id = dom_id.upsert(e);
-
-      const data = form.data(e);
-      document.body.dispatchEvent(new CustomEvent('* submit', {detail: data}));
-      document.body.dispatchEvent(new CustomEvent(`${e.id} submit`, {detail: data}));
-
-      if (action_url.indexOf('/') < 0) // then, no fetch needed.
-        return true;
-
-      return http.fetch(form_id, e.getAttribute('action'), 'POST', form.data(e));
-    },
-
     cancel(e: HTMLFormElement) {
       const data = form.data(e);
       document.body.dispatchEvent(new CustomEvent('* cancel', {detail: data}));

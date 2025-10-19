@@ -1,16 +1,12 @@
 
 import { dispatch } from './on.js';
 import { upsert_id } from './dom.mts';
-import { css } from './css.mts';
+import { status as style_status } from './css.mts';
 import { warn } from './log.mts';
 
 const THIS_ORIGIN = (new URL(window.location.href)).origin;
 
 // import type { Request_Origin, Response_Origin } from './types.mts';
-
-import { http } from './http.mts';
-import { css } from './css.mts';
-import { warn } from 'base.js/src/log.mts';
 
 export function data(form_ele) {
   const raw_data = new FormData(form_ele);
@@ -33,137 +29,115 @@ export function path_to_url(x) {
   return new URL(x, THIS_ORIGIN);
 } // func
 
+function GET(form_ele, action) {
+    return fetch_form('GET', form_ele);
+};
+
 function POST(form_ele, action) {
     return fetch_form('POST', form_ele);
 };
 
 function fetch_form(method, form_ele) {
     const f_data = data(form_ele);
-    const action = path_to_url(form_ele.getAttribute('action'));
+    const action = form_ele.getAttribute('action') || '/';
+    const url    = path_to_url(form_ele.getAttribute('action'));
 
     const fetch_data = {
       method,
+      cache         : "no-cache",
       referrerPolicy: "no-referrer",
-      cache: "no-cache",
-      headers: {
+      headers       : {
         "Content-Type": "application/json",
         X_SENT_FROM: form_ele.id
       },
       body: JSON.stringify(f_data || {})
     };
 
-    const request = {
+    const req_origin = {
       request: fetch_data,
-      dom_id: form_ele.id
+      dom_id : form_ele.id,
+      action : raw_action
     };
 
-    dispatch(`request`, request);
+    dispatch(`request`, req_origin);
 
-    css.by_id.reset_to('loading', dom_id);
+    style_status.update(dom_id, 'loading');
 
     setTimeout(async () => {
-      fetch(action, fetch_data)
-      .then((resp) => dispatch.response(request, resp))
-      .catch((err) => dispatch.network_error(err, request));
+      fetch(url, fetch_data)
+      .then((resp) => response(req_origin, resp))
+      .catch((err) => network_error(err, req_origin));
     }, 450);
 
     return true;
-};
+}
 
-form: {
-  submit(e: HTMLFormElement) {
+async function response(req, raw_resp) {
+  if (!raw_resp.ok)
+    return dispatch.server_error(req, raw_resp);
 
-    return http.fetch(form_id, e.getAttribute('action'), 'POST', form.data(e));
-  },
+  const resp = (await raw_resp.json());
 
-    cancel(e: HTMLFormElement) {
-      const data = form.data(e);
-      document.body.dispatchEvent(new CustomEvent('* cancel', {detail: data}));
-      document.body.dispatchEvent(new CustomEvent(`${e.id} cancel`, {detail: data}));
-      return true;
-    },
+  const x_sent_from = raw_resp.headers.get('X_SENT_FROM');
 
-    reset(e: HTMLFormElement) {
-      const data = form.data(e);
-      document.body.dispatchEvent(new CustomEvent('* reset', {detail: data}));
-      document.body.dispatchEvent(new CustomEvent(`${e.id} reset`, {detail: data}));
-      return true;
-    }
-},
+  if (!x_sent_from) {
+    warn(`X_SENT_FROM key not found in headers: ${Array.from(raw_resp.headers.keys()).join(', ')}`);
+    return resp;
+  }
 
-  request(req: Request_Origin) {
-    document.body.dispatchEvent(new CustomEvent('* request', {detail: req}));
-    document.body.dispatchEvent(new CustomEvent(`${req.dom_id} request`, {detail: req}));
-  },
+  if(x_sent_from !== req.dom_id) {
+    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${req.dom_id}`);
+    return resp;
+  }
 
-  async response(req: Request_Origin, raw_resp: Response) {
-    if (!raw_resp.ok)
-      return dispatch.server_error(req, raw_resp);
+  const e = document.getElementById(req.dom_id);
 
-    const resp: Response_Origin = (await raw_resp.json()) as Response_Origin;
+  dispatch('response', {response: resp, request: req});
 
-    const x_sent_from = raw_resp.headers.get('X_SENT_FROM');
+  if (e)
+    style_status.update(e, resp.status);
 
-    if (!x_sent_from) {
-      warn(`X_SENT_FROM key not found in headers: ${Array.from(raw_resp.headers.keys()).join(', ')}`);
-      return resp;
-    }
+  return dispatch.status(resp, req);
+}
 
-    if(x_sent_from !== req.dom_id) {
-      warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${req.dom_id}`);
-      return resp;
-    }
+function status(resp, req) {
+  const status = resp.status;
+  warn(`STATUS: ${status}: ${req.dom_id} ${req.action}`);
+  const detail = {detail: {status, response: resp, request: req}};
+  style_status.update(req.dom_id, status);
+  dispatch('status', detail);
+}
 
-    const e = document.getElementById(req.dom_id);
+function server_error(req, raw_resp) {
+  warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
 
-    const detail = {detail: {response: resp, request: req}};
+  const detail = {detail: {request: req, response: raw_resp}};
+  dispatch('server_error', detail)
 
-    document.body.dispatchEvent(new CustomEvent('* response', detail));
-    document.body.dispatchEvent(new CustomEvent(`${req.dom_id} response`, detail));
+  const e = document.getElementById(req.dom_id);
+  if (e) {
+    style_status.update(e, 'server_error');
+    return true;
+  }
 
-    if (e)
-      css.by_id.reset(req.dom_id);
+  return false;
+}
 
-    return dispatch.status(resp, req);
-  },
+function network_error(error, req) {
+  warn(`!!! Network error: ${req.dom_id} ${req.action}: ${error.message}`);
+  warn(error);
 
-  status(resp: Response_Origin, req: Request_Origin) {
-    const status = resp.status;
-    const detail = {detail: {response: resp, request: req}};
-    css.by_id.reset_to(status, req.dom_id);
-    document.body.dispatchEvent(new CustomEvent(`* ${status}`, detail));
-    document.body.dispatchEvent(new CustomEvent(`${req.dom_id} ${status}`, detail));
-  },
+  const detail = {detail: {error, request}};
+  dispatch('network_error', detail);
 
-  server_error(req: Request_Origin, raw_resp: Response) {
-    warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
+  const e = document.getElementById(request.dom_id);
+  if (e) {
+    style_status.update(e, 'network_error');
+    return true;
+  }
 
-    const e = document.getElementById(req.dom_id);
-    if (e) {
-      css.by_element.reset_to('server_error', e);
-      const detail = {detail: {request: req, response: raw_resp}};
-      document.body.dispatchEvent(new CustomEvent('* server_error', detail));
-      document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
-      return true;
-    }
-    return false;
-  },
-
-  network_error(error: any, request: Request_Origin) {
-    warn(error);
-    warn(`!!! Network error: ${error.message}`);
-    const detail = {detail: {error, request}};
-    document.body.dispatchEvent(new CustomEvent('* network_error', detail));
-    document.body.dispatchEvent(new CustomEvent(`${request.dom_id} network_error`, detail));
-
-    const e = document.getElementById(request.dom_id);
-    if (e) {
-      css.by_element.reset_to('network_error', e);
-      return true;
-    }
-
-    return false;
-  } // === function
+  return false;
+} // === function
 
 
 export function init() {
