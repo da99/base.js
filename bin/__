@@ -19,7 +19,6 @@ case "$*" in
 
   test)
     set -x
-    # bun run --hot spec/serve.js
     bunx vitest --dom --testNamePattern 'spec/*.spec.mts'
     ;;
 
