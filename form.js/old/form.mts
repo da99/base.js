@@ -57,7 +57,7 @@ export const form = {
           break;
           default:
             ev.stopPropagation();
-          ev.preventDefault();
+            ev.preventDefault();
         }
         // do something
   },
