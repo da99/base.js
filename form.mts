@@ -1,21 +1,22 @@
 
-import { dispatch } from './on.js';
+
+import { dispatch } from './on.mjs';
 import { upsert_id } from './dom.mts';
 import { status as style_status } from './css.mts';
 import { warn } from './log.mts';
 
+// import type { Request_Origin, Response_Origin } from './types.mjs';
+
 const THIS_ORIGIN = (new URL(window.location.href)).origin;
 
-// import type { Request_Origin, Response_Origin } from './types.mts';
+// function GET(form_ele) { return fetch_form('GET', form_ele); };
+function POST(form_ele: HTMLElement) { return fetch_form('POST', form_ele); };
 
-export function path_to_url(x) {
-  if (typeof x !== 'string')
-    return false;
-
+export function path_to_url(x: string) {
   return new URL(x, THIS_ORIGIN);
 } // func
 
-export function to_data(form_ele) {
+export function to_data(form_ele: HTMLFormElement) {
   const raw_data = new FormData(form_ele);
   const fin = {};
   for (let [k,v] of raw_data.entries()) {
@@ -29,8 +30,74 @@ export function to_data(form_ele) {
   return fin;
 } // export function
 
-// function GET(form_ele) { return fetch_form('GET', form_ele); };
-function POST(form_ele) { return fetch_form('POST', form_ele); };
+
+  export function invalid_fields(form: HTMLFormElement, fields: { [index: string]: string }) {
+    for (const k in fields) {
+      const target = form.querySelector(`label[for='${k}'], input[name='${k}']`);
+      const fieldset = (target && target.closest('fieldset')) || form.querySelector(`fieldset.${k}`);
+      if (fieldset)
+        fieldset.classList.add('invalid');
+    }
+    return form;
+  }
+
+
+  export function on_click_button(ev: MouseEvent) {
+    const ele =  ev.target && (ev.target as Element).tagName && (ev.target as Element);
+
+    if (!ele)
+      return false;
+
+    if (ele.tagName !== 'BUTTON')
+      return false;
+
+    const button = ele as HTMLButtonElement;
+
+    const form = button.closest('form');
+    if (!form) {
+      warn('Form not found for: ' + button.tagName);
+      return false;
+    }
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    dom.id.upsert(form);
+
+    if (button.classList.contains('submit'))
+      return dispatch.form.submit(form);
+
+    if (button.classList.contains('reset'))
+      return dispatch.form.reset(form);
+
+    if (button.classList.contains('cancel'))
+      return dispatch.form.cancel(form);
+
+    warn(`Unknown action for form: ${form.id}`);
+    return false;
+  } // === function
+
+  export function event_allow_only_numbers(event: Event) {
+        const ev = event as KeyboardEvent;
+        switch (ev.key) {
+          case '0':
+            case '1': case '2': case '3': case '4': case '5':
+            case '6': case '7': case '8': case '9':
+            true;
+          break;
+          default:
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+        // do something
+  }
+
+  export function input_only_numbers(selector: string) {
+    return document.querySelectorAll(selector).forEach(
+      e => e.addEventListener('keydown', event_allow_only_numbers)
+    );
+  } // === function
+
 function fetch_form(method, form_ele) {
   const f_data = to_data(form_ele);
   const action = form_ele.getAttribute('action') || '/';
