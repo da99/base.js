@@ -8,18 +8,18 @@ export function on(raw_name, f) {
   document.body.addEventListener(standard_name(raw_name), f);
 }
 
-on.before        = function (model_name, f) { return on(`before ${model_name}`, f); };
-on.after         = function (model_name, f) { return on(`after ${model_name}`,  f); };
-on.network_error = function (model_name, f) { return on(`network_error ${model_name}`, f); };
-on.server_error  = function (model_name, f) { return on(`server_error ${model_name}`, f); };
-on.submit        = function (model_name, f) { return on(`submit ${model_name}`,    f); };
-on.request       = function (model_name, f) { return on(`request ${model_name}`,   f); };
-on.response      = function (model_name, f) { return on(`response ${model_name}`,  f); };
-on.ok            = function (model_name, f) { return on(`ok ${model_name}`,        f); };
-on.invalid       = function (model_name, f) { return on(`invalid ${model_name}`,   f); };
-on.try_again     = function (model_name, f) { return on(`try_again ${model_name}`, f); };
-on.not_yet       = function (model_name, f) { return on(`not_yet ${model_name}`,   f); };
-on.expired       = function (model_name, f) { return on(`expired ${model_name}`,   f); };
+export function before(model_name, f) { return on(`before ${model_name}`, f); };
+export function after(model_name, f) { return on(`after ${model_name}`,  f); };
+export function network_error(model_name, f) { return on(`network_error ${model_name}`, f); };
+export function server_error(model_name, f) { return on(`server_error ${model_name}`, f); };
+export function submit(model_name, f) { return on(`submit ${model_name}`,    f); };
+export function request(model_name, f) { return on(`request ${model_name}`,   f); };
+export function response(model_name, f) { return on(`response ${model_name}`,  f); };
+export function ok(model_name, f) { return on(`ok ${model_name}`,        f); };
+export function invalid(model_name, f) { return on(`invalid ${model_name}`,   f); };
+export function try_again(model_name, f) { return on(`try_again ${model_name}`, f); };
+export function not_yet(model_name, f) { return on(`not_yet ${model_name}`,   f); };
+export function expired(model_name, f) { return on(`expired ${model_name}`,   f); };
 
 export function dispatch(raw_name, data) {
   const model_name = standard_name(raw_name);
