@@ -21,7 +21,7 @@ export function try_again(model_name, f) { return on(`try_again ${model_name}`, 
 export function not_yet(model_name, f) { return on(`not_yet ${model_name}`,   f); };
 export function expired(model_name, f) { return on(`expired ${model_name}`,   f); };
 
-export function dispatch(raw_name, data) {
+export function emit(raw_name, data) {
   const model_name = standard_name(raw_name);
   const asterisk   = {detail: {model_name, ...data}};
   const main       = {detail: data};
@@ -37,16 +37,16 @@ export function dispatch(raw_name, data) {
 
 
 
-dispatch.before        = function (model_name, f) { return dispatch(`before ${model_name}`, f); };
-dispatch.after         = function (model_name, f) { return dispatch(`after ${model_name}`,  f); };
-dispatch.network_error = function (model_name, f) { return dispatch(`network_error ${model_name}`, f); };
-dispatch.server_error  = function (model_name, f) { return dispatch(`server_error ${model_name}`, f); };
-dispatch.submit        = function (model_name, f) { return dispatch(`submit ${model_name}`,    f); };
-dispatch.request       = function (model_name, f) { return dispatch(`request ${model_name}`,   f); };
-dispatch.response      = function (model_name, f) { return dispatch(`response ${model_name}`,  f); };
-dispatch.ok            = function (model_name, f) { return dispatch(`ok ${model_name}`,        f); };
-dispatch.invalid       = function (model_name, f) { return dispatch(`invalid ${model_name}`,   f); };
-dispatch.try_again     = function (model_name, f) { return dispatch(`try_again ${model_name}`, f); };
-dispatch.not_yet       = function (model_name, f) { return dispatch(`not_yet ${model_name}`,   f); };
-dispatch.expired       = function (model_name, f) { return dispatch(`expired ${model_name}`,   f); };
-dispatch.status        = function (model_name, f) { return dispatch(`status ${model_name}`,   f); };
+emit.before        = function (model_name, f) { return emit(`before ${model_name}`, f); };
+emit.after         = function (model_name, f) { return emit(`after ${model_name}`,  f); };
+emit.network_error = function (model_name, f) { return emit(`network_error ${model_name}`, f); };
+emit.server_error  = function (model_name, f) { return emit(`server_error ${model_name}`, f); };
+emit.submit        = function (model_name, f) { return emit(`submit ${model_name}`,    f); };
+emit.request       = function (model_name, f) { return emit(`request ${model_name}`,   f); };
+emit.response      = function (model_name, f) { return emit(`response ${model_name}`,  f); };
+emit.ok            = function (model_name, f) { return emit(`ok ${model_name}`,        f); };
+emit.invalid       = function (model_name, f) { return emit(`invalid ${model_name}`,   f); };
+emit.try_again     = function (model_name, f) { return emit(`try_again ${model_name}`, f); };
+emit.not_yet       = function (model_name, f) { return emit(`not_yet ${model_name}`,   f); };
+emit.expired       = function (model_name, f) { return emit(`expired ${model_name}`,   f); };
+emit.status        = function (model_name, f) { return emit(`status ${model_name}`,   f); };

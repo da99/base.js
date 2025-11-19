@@ -1,6 +1,6 @@
 
 
-import { dispatch } from './on.mjs';
+import { emit } from './on.mjs';
 import { upsert_id } from './dom.mts';
 import { status as style_status } from './css.mts';
 import { warn } from './log.mts';
@@ -65,13 +65,13 @@ export function to_data(form_ele: HTMLFormElement) {
     dom.id.upsert(form);
 
     if (button.classList.contains('submit'))
-      return dispatch.form.submit(form);
+      return emit.form.submit(form);
 
     if (button.classList.contains('reset'))
-      return dispatch.form.reset(form);
+      return emit.form.reset(form);
 
     if (button.classList.contains('cancel'))
-      return dispatch.form.cancel(form);
+      return emit.form.cancel(form);
 
     warn(`Unknown action for form: ${form.id}`);
     return false;
@@ -121,7 +121,7 @@ function fetch_form(method, form_ele) {
     }
   };
 
-  dispatch.request(request.dom_id, request);
+  emit.request(request.dom_id, request);
 
   style_status.update(form_ele.id, 'loading');
 
@@ -157,7 +157,7 @@ async function run_response(data) {
 
   const e = document.getElementById(request.dom_id);
 
-  dispatch.response(request.dom_id, {json, ...data});
+  emit.response(request.dom_id, {json, ...data});
 
 
   const status = json.status;
@@ -167,8 +167,8 @@ async function run_response(data) {
     style_status.update(e, json.status);
 
   warn(`STATUS: ${status}: ${request.dom_id} ${request.action}`);
-  dispatch.status(request.dom_id, new_data);
-  dispatch(`${response.status} ${dom_id}`, new_data);
+  emit.status(request.dom_id, new_data);
+  emit(`${response.status} ${dom_id}`, new_data);
 
   return data;
 } // async run_response
@@ -177,7 +177,7 @@ function run_server_error(data) {
   const {request, response} = data;
   warn(`!!! Server Error: ${response.status} - ${response.statusText}`);
 
-  dispatch('server_error', data);
+  emit('server_error', data);
 
   const e = document.getElementById(request.dom_id);
   if (e) {
@@ -193,7 +193,7 @@ function run_network_error(data) {
   warn(`!!! Network error: ${request.dom_id} ${request.action}: ${error.message}`);
   warn(error);
 
-  dispatch('network_error', data);
+  emit('network_error', data);
 
   const e = document.getElementById(request.dom_id);
   if (e) {

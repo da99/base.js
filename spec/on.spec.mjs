@@ -1,12 +1,12 @@
 
 import { expect, test } from 'vitest';
-import { on, dispatch } from '../on.mjs';
+import { on, emit } from '../on.mjs';
 
 test("adds an event handler", function () {
   let x = 0
   on("increase", function (_data, _evt) { x++; });
-  dispatch("increase");
-  dispatch("increase");
+  emit("increase");
+  emit("increase");
   expect(x).toBe(2);
 }); // it
 
@@ -14,7 +14,7 @@ test('removes repeating whitespace in event name', function () {
   let x = 'unknown';
   on("   the\t   white    space   ", function (_detail, evt) { x = 'white space normalized'; });
 
-  dispatch("the white space");
+  emit("the white space");
   expect(x).toBe("white space normalized")
 }); // test
 
@@ -22,25 +22,25 @@ test('removes repeating whitespace in dispatch event name', function () {
   let x = 'unknown dispatch';
   on("   white   dispatch   ", function (_detail, evt) { x = 'white dispatch'; });
 
-  dispatch("white dispatch      ");
+  emit("white dispatch      ");
   expect(x).toBe("white dispatch")
 }); // test
 
 test('runs "before" handler', function () {
   let x = 1
   on.before("beforely", function (_data, _evt) { x++; });
-  dispatch("beforely");
-  dispatch("beforely");
-  dispatch("beforely");
+  emit("beforely");
+  emit("beforely");
+  emit("beforely");
   expect(x).toBe(1 + 3)
 }); // test
 
 test('runs "after" handler', function () {
   let x = 5
   on.after("afterly", function (_data, _evt) { x++; });
-  dispatch("afterly");
-  dispatch("afterly");
-  dispatch("afterly");
+  emit("afterly");
+  emit("afterly");
+  emit("afterly");
   expect(x).toBe(5 + 3)
 }); // test
 
@@ -50,7 +50,7 @@ test('runs "before/main/after" handlers in the right order', function () {
   on("after-all", function (_data, _evt) { stages.push('main'); })
   on.before("after-all", function (_data, _evt) { stages.push('before'); })
 
-  dispatch("after-all");
+  emit("after-all");
 
   expect(stages).toStrictEqual(['before', 'main', 'after']);
 }); // test
@@ -59,7 +59,7 @@ test('passes data to handlers via event.detail', function () {
   let y;
   const x = {"name": "my data"};
   on("dataly", function (evt) { y = evt.detail.name; })
-  dispatch('dataly', x);
+  emit('dataly', x);
 
   expect(y).toBe(x.name);
 }); // test
@@ -67,9 +67,9 @@ test('passes data to handlers via event.detail', function () {
 test('runs * on all handlers', function () {
   let x = 0;
   on('*', function () { x++;});
-  dispatch('something1', null);
-  dispatch('something2', null);
-  dispatch('something3', null);
+  emit('something1', null);
+  emit('something2', null);
+  emit('something3', null);
 
   expect(x).toBe(0 + 3);
 }); // test
