@@ -7,10 +7,12 @@
 // }
 // import type { Request_Origin, Response_Origin } from './types.mts';
 
+export type Custom_Event_Handler = (o: Record<string, any>, e: CustomEvent) => void;
 export type Response_Handler = (resp: Response_Origin, req: Request_Origin) => void;
 export const Response_States = ['ok', 'invalid', 'try_again', 'not_yet', 'expired'] as const;
 export const Event_States = ['request', 'network_error', 'server_error', 'response', 'loading'] as const;
 export const CSS_States = [...Response_States, ...Event_States] as const;
+
 
 export interface HTMLDataSet {
   data: {[key: string]: string | number}

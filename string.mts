@@ -1,5 +1,6 @@
 
 export const WHITESPACE_PATTERN     = /\s+/g;
+const SPACE = ' ';
 
 export const BEGIN_DOT_SLASH        = /^\.+\/+/;
 export const END_SLASH              = /\/+$/;
@@ -10,6 +11,8 @@ export const MB                     = 1024 * 1024;
 function length_not_zero(x: {length: number}): boolean {
   return x.length != 0;
 } // function
+
+export function standard_name(x: string) { return x.trim().replaceAll(WHITESPACE_PATTERN, SPACE); }
 
 export function path_to_filename(s: string, replace: string = '.') {
   return s
