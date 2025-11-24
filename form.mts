@@ -1,6 +1,6 @@
 
 
-import { emit } from './on.mjs';
+import { emit, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
 import { upsert_id } from './dom.mts';
 import { status as style_status } from './css.mts';
 import { warn } from './log.mts';
@@ -10,7 +10,7 @@ import { warn } from './log.mts';
 const THIS_ORIGIN = (new URL(window.location.href)).origin;
 
 // function GET(form_ele) { return fetch_form('GET', form_ele); };
-function POST(form_ele: HTMLElement) { return fetch_form('POST', form_ele); };
+function POST(form_ele: HTMLFormElement) { return fetch_form('POST', form_ele); };
 
 export function path_to_url(x: string) {
   return new URL(x, THIS_ORIGIN);
@@ -18,7 +18,7 @@ export function path_to_url(x: string) {
 
 export function to_data(form_ele: HTMLFormElement) {
   const raw_data = new FormData(form_ele);
-  const fin = {};
+  const fin : Record<string, any> = {};
   for (let [k,v] of raw_data.entries()) {
     if (fin.hasOwnProperty(k)) {
       if(!Array.isArray(fin[k]))
@@ -31,77 +31,71 @@ export function to_data(form_ele: HTMLFormElement) {
 } // export function
 
 
-  export function invalid_fields(form: HTMLFormElement, fields: { [index: string]: string }) {
-    for (const k in fields) {
-      const target = form.querySelector(`label[for='${k}'], input[name='${k}']`);
-      const fieldset = (target && target.closest('fieldset')) || form.querySelector(`fieldset.${k}`);
-      if (fieldset)
-        fieldset.classList.add('invalid');
-    }
-    return form;
+export function invalid_fields(form: HTMLFormElement, fields: { [index: string]: string }) {
+  for (const k in fields) {
+    const target = form.querySelector(`label[for='${k}'], input[name='${k}']`);
+    const fieldset = (target && target.closest('fieldset')) || form.querySelector(`fieldset.${k}`);
+    if (fieldset)
+      fieldset.classList.add('invalid');
   }
+  return form;
+}
 
 
-  export function on_click_button(ev: MouseEvent) {
-    const ele =  ev.target && (ev.target as Element).tagName && (ev.target as Element);
+export function on_click_button(ev: MouseEvent) {
+  const ele =  ev.target && (ev.target as Element).tagName && (ev.target as Element);
 
-    if (!ele)
-      return false;
-
-    if (ele.tagName !== 'BUTTON')
-      return false;
-
-    const button = ele as HTMLButtonElement;
-
-    const form = button.closest('form');
-    if (!form) {
-      warn('Form not found for: ' + button.tagName);
-      return false;
-    }
-
-    ev.preventDefault();
-    ev.stopPropagation();
-
-    dom.id.upsert(form);
-
-    if (button.classList.contains('submit'))
-      return emit.form.submit(form);
-
-    if (button.classList.contains('reset'))
-      return emit.form.reset(form);
-
-    if (button.classList.contains('cancel'))
-      return emit.form.cancel(form);
-
-    warn(`Unknown action for form: ${form.id}`);
+  if (!ele)
     return false;
-  } // === function
 
-  export function event_allow_only_numbers(event: Event) {
-        const ev = event as KeyboardEvent;
-        switch (ev.key) {
-          case '0':
-            case '1': case '2': case '3': case '4': case '5':
-            case '6': case '7': case '8': case '9':
-            true;
-          break;
-          default:
-            ev.stopPropagation();
-            ev.preventDefault();
-        }
-        // do something
+  if (ele.tagName !== 'BUTTON')
+    return false;
+
+  const button = ele as HTMLButtonElement;
+
+  const form = button.closest('form');
+  if (!form) {
+    warn('Form not found for: ' + button.tagName);
+    return false;
   }
 
-  export function input_only_numbers(selector: string) {
-    return document.querySelectorAll(selector).forEach(
-      e => e.addEventListener('keydown', event_allow_only_numbers)
-    );
-  } // === function
+  ev.preventDefault();
+  ev.stopPropagation();
 
-function fetch_form(method, form_ele) {
+  upsert_id(form);
+
+  if (button.classList.contains('submit'))
+    return emit_submit(form.id, to_data(form));
+
+  warn(`Unknown action for form: ${form.id}`);
+  return false;
+} // === function
+
+export function event_allow_only_numbers(event: Event) {
+  const ev = event as KeyboardEvent;
+  switch (ev.key) {
+    case '0':
+      case '1': case '2': case '3': case '4': case '5':
+      case '6': case '7': case '8': case '9':
+      true;
+    break;
+    default:
+      ev.stopPropagation();
+    ev.preventDefault();
+  }
+  // do something
+}
+
+export function input_only_numbers(selector: string) {
+  return document.querySelectorAll(selector).forEach(
+    e => e.addEventListener('keydown', event_allow_only_numbers)
+  );
+} // === function
+
+export function fetch_form(method: string, form_ele: HTMLFormElement) {
   const f_data = to_data(form_ele);
-  const action = form_ele.getAttribute('action') || '/';
-  const url    = path_to_url(form_ele.getAttribute('action'));
+  const raw_action = form_ele.getAttribute('action') || '/';
+  const url    = path_to_url(raw_action);
 
   if (!form_ele.id)
     upsert_id(form_ele);
@@ -121,7 +115,7 @@ function fetch_form(method, form_ele) {
     }
   };
 
-  emit.request(request.dom_id, request);
+  emit_request(request.dom_id, request);
 
   style_status.update(form_ele.id, 'loading');
 
@@ -134,7 +128,7 @@ function fetch_form(method, form_ele) {
   return true;
 } // fetch_form
 
-async function run_response(data) {
+async function run_response(data: Record<string, any>) {
   const {request, response} = data;
   if (!response.ok) {
     run_server_error(data);
@@ -147,7 +141,7 @@ async function run_response(data) {
 
   if (!x_sent_from) {
     warn(`X_SENT_FROM key not found in headers: ${Array.from(response.headers.keys()).join(', ')}`);
-    return resp;
+    return response;
   }
 
   if(x_sent_from !== request.dom_id) {
@@ -157,7 +151,7 @@ async function run_response(data) {
 
   const e = document.getElementById(request.dom_id);
 
-  emit.response(request.dom_id, {json, ...data});
+  emit_response(request, response);
 
 
   const status = json.status;
@@ -167,13 +161,13 @@ async function run_response(data) {
     style_status.update(e, json.status);
 
   warn(`STATUS: ${status}: ${request.dom_id} ${request.action}`);
-  emit.status(request.dom_id, new_data);
-  emit(`${response.status} ${dom_id}`, new_data);
+  emit_status(request, response);
+  emit(`${response.status} ${request.dom_id}`, new_data);
 
   return data;
 } // async run_response
 
-function run_server_error(data) {
+function run_server_error(data: Record<string, any>) {
   const {request, response} = data;
   warn(`!!! Server Error: ${response.status} - ${response.statusText}`);
 
@@ -188,7 +182,7 @@ function run_server_error(data) {
   return false;
 }
 
-function run_network_error(data) {
+function run_network_error(data: Record<string, any>) {
   const {error, request} = data;
   warn(`!!! Network error: ${request.dom_id} ${request.action}: ${error.message}`);
   warn(error);
@@ -206,21 +200,22 @@ function run_network_error(data) {
 
 
 export function init() {
-  document.body.attachEventListener('click', function (evt) {
-    const ele = evt.target;
-    const form_ele = ele && ele.tagName == 'BUTTON' && ele.type == 'submit' && ele.closest('FORM')
+  document.body.addEventListener('click', function (evt) {
+    const ele = evt.target as HTMLElement;
+    const form_ele = ele && ele.tagName == 'BUTTON' && (ele as HTMLButtonElement).type == 'submit' && ele.closest('FORM')
 
     if (!form_ele)
       return false;
 
-    if (form_ele.getAttribute('action').indexOf('/') !== 0)
+    const raw_action = form_ele.getAttribute('action') || '/';
+    if (raw_action.indexOf('/') !== 0)
       return false;
 
     evt.preventDefault();
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    POST(form_ele);
+    POST(form_ele as HTMLFormElement);
     return false;
   }); // attachEventListener
 } //

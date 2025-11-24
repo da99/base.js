@@ -1,6 +1,7 @@
 
 import { standard_name } from './string.mts';
 import { warn } from './log.mts';
+import { reset as css_reset, reset_to as css_reset_to } from './css.mts';
 import type { Request_Origin, Response_Origin } from './types.mts';
 
 export function emit(raw_name: string, data: Record<string, any>) {
@@ -38,9 +39,9 @@ export function expired(model_name: string, data: Record<string, any>) { return 
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
-async function response(req: Request_Origin, raw_resp: Response) {
+export async function response(req: Request_Origin, raw_resp: Response) {
   if (!raw_resp.ok)
-    return dispatch.server_error(req, raw_resp);
+    return server_error(req, raw_resp);
 
   const resp: Response_Origin = (await raw_resp.json()) as Response_Origin;
 
@@ -64,16 +65,16 @@ async function response(req: Request_Origin, raw_resp: Response) {
   document.body.dispatchEvent(new CustomEvent(`${req.dom_id} response`, detail));
 
   if (e)
-    css.by_id.reset(req.dom_id);
+    css_reset(req.dom_id);
 
-  return dispatch.status(resp, req);
+  return status(resp, req);
 } // async function
 
 // export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
 export function status(resp: Response_Origin, req: Request_Origin) {
   const status = resp.status;
   const detail = {detail: {response: resp, request: req}};
-  css.by_id.reset_to(status, req.dom_id);
+  css_reset_to(status, req.dom_id);
   document.body.dispatchEvent(new CustomEvent(`* ${status}`, detail));
   document.body.dispatchEvent(new CustomEvent(`${req.dom_id} ${status}`, detail));
 }
@@ -84,7 +85,7 @@ export function server_error(req: Request_Origin, raw_resp: Response) {
 
     const e = document.getElementById(req.dom_id);
     if (e) {
-      css.by_element.reset_to('server_error', e);
+      css_reset_to('server_error', req.dom_id);
       const detail = {detail: {request: req, response: raw_resp}};
       document.body.dispatchEvent(new CustomEvent('* server_error', detail));
       document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
@@ -103,7 +104,7 @@ export function network_error(error: any, request: Request_Origin) {
 
     const e = document.getElementById(request.dom_id);
     if (e) {
-      css.by_element.reset_to('network_error', e);
+      css_reset_to('network_error', e);
       return true;
     }
 
