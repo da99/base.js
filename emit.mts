@@ -1,5 +1,7 @@
 
 import { standard_name } from './string.mts';
+import { warn } from './log.mts';
+import type { Request_Origin, Response_Origin } from './types.mts';
 
 export function emit(raw_name: string, data: Record<string, any>) {
   const model_name = standard_name(raw_name);
@@ -25,61 +27,59 @@ export function emit_raw(raw_name: string, data: Record<string, any>) {
 export function before(model_name: string, data: Record<string, any>) { return emit_raw(`before ${model_name}`, data); };
 export function after(model_name: string, data: Record<string, any>) { return emit_raw(`after ${model_name}`,  data); };
 
-export function network_error(model_name: string, data: Record<string, any>) { return emit(`network_error ${model_name}`, data); };
-export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
-
 export function submit(model_name: string, data: Record<string, any>) { return emit(`submit ${model_name}`,    data); };
 export function request(model_name: string, data: Record<string, any>) { return emit(`request ${model_name}`,   data); };
-export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
 
 export function ok(model_name: string, data: Record<string, any>) { return emit(`ok ${model_name}`,        data); };
 export function invalid(model_name: string, data: Record<string, any>) { return emit(`invalid ${model_name}`,   data); };
 export function try_again(model_name: string, data: Record<string, any>) { return emit(`try_again ${model_name}`, data); };
 export function not_yet(model_name: string, data: Record<string, any>) { return emit(`not_yet ${model_name}`,   data); };
 export function expired(model_name: string, data: Record<string, any>) { return emit(`expired ${model_name}`,   data); };
-export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
-export const dispatch = {
 
-  async response(req: Request_Origin, raw_resp: Response) {
-    if (!raw_resp.ok)
-      return dispatch.server_error(req, raw_resp);
 
-    const resp: Response_Origin = (await raw_resp.json()) as Response_Origin;
+// export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
+async function response(req: Request_Origin, raw_resp: Response) {
+  if (!raw_resp.ok)
+    return dispatch.server_error(req, raw_resp);
 
-    const x_sent_from = raw_resp.headers.get('X_SENT_FROM');
+  const resp: Response_Origin = (await raw_resp.json()) as Response_Origin;
 
-    if (!x_sent_from) {
-      warn(`X_SENT_FROM key not found in headers: ${Array.from(raw_resp.headers.keys()).join(', ')}`);
-      return resp;
-    }
+  const x_sent_from = raw_resp.headers.get('X_SENT_FROM');
 
-    if(x_sent_from !== req.dom_id) {
-      warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${req.dom_id}`);
-      return resp;
-    }
+  if (!x_sent_from) {
+    warn(`X_SENT_FROM key not found in headers: ${Array.from(raw_resp.headers.keys()).join(', ')}`);
+    return resp;
+  }
 
-    const e = document.getElementById(req.dom_id);
+  if(x_sent_from !== req.dom_id) {
+    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${req.dom_id}`);
+    return resp;
+  }
 
-    const detail = {detail: {response: resp, request: req}};
+  const e = document.getElementById(req.dom_id);
 
-    document.body.dispatchEvent(new CustomEvent('* response', detail));
-    document.body.dispatchEvent(new CustomEvent(`${req.dom_id} response`, detail));
+  const detail = {detail: {response: resp, request: req}};
 
-    if (e)
-      css.by_id.reset(req.dom_id);
+  document.body.dispatchEvent(new CustomEvent('* response', detail));
+  document.body.dispatchEvent(new CustomEvent(`${req.dom_id} response`, detail));
 
-    return dispatch.status(resp, req);
-  },
+  if (e)
+    css.by_id.reset(req.dom_id);
 
-  status(resp: Response_Origin, req: Request_Origin) {
-    const status = resp.status;
-    const detail = {detail: {response: resp, request: req}};
-    css.by_id.reset_to(status, req.dom_id);
-    document.body.dispatchEvent(new CustomEvent(`* ${status}`, detail));
-    document.body.dispatchEvent(new CustomEvent(`${req.dom_id} ${status}`, detail));
-  },
+  return dispatch.status(resp, req);
+} // async function
 
-  server_error(req: Request_Origin, raw_resp: Response) {
+// export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
+export function status(resp: Response_Origin, req: Request_Origin) {
+  const status = resp.status;
+  const detail = {detail: {response: resp, request: req}};
+  css.by_id.reset_to(status, req.dom_id);
+  document.body.dispatchEvent(new CustomEvent(`* ${status}`, detail));
+  document.body.dispatchEvent(new CustomEvent(`${req.dom_id} ${status}`, detail));
+}
+
+// export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
+export function server_error(req: Request_Origin, raw_resp: Response) {
     warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
 
     const e = document.getElementById(req.dom_id);
@@ -91,9 +91,10 @@ export const dispatch = {
       return true;
     }
     return false;
-  },
+  }
 
-  network_error(error: any, request: Request_Origin) {
+// export function network_error(model_name: string, data: Record<string, any>) { return emit(`network_error ${model_name}`, data); };
+export function network_error(error: any, request: Request_Origin) {
     warn(error);
     warn(`!!! Network error: ${error.message}`);
     const detail = {detail: {error, request}};
@@ -108,4 +109,3 @@ export const dispatch = {
 
     return false;
   } // === function
-}; // export dispatch
