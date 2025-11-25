@@ -17,7 +17,7 @@ export function dom_init() {
   const is_setup = document.body.classList.contains(FORMALIZED);
   if (is_setup)
     return false;
-  document.body.addEventListener('click', handle_click_event);
+  document.body.addEventListener('click', handle_button_submit_event);
   document.body.classList.add(FORMALIZED);
   return true;
 } // function
@@ -75,13 +75,11 @@ export function input_only_numbers(selector: string) {
   );
 } // === function
 
-export function fetch_form(method: string, form_ele: HTMLFormElement) {
-  const f_data = to_data(form_ele);
+export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Record<string, any>) {
   const raw_action = form_ele.getAttribute('action') || '/';
-  const url    = path_to_url(raw_action);
+  const url        = path_to_url(raw_action);
 
-  if (!form_ele.id)
-    upsert_id(form_ele);
+  upsert_id(form_ele);
 
   const request = {
     dom_id : form_ele.id,
@@ -181,7 +179,7 @@ function run_network_error(data: Record<string, any>) {
   return false;
 } // === function
 
-function handle_click_event(evt: Event) {
+function handle_button_submit_event(evt: Event) {
     const ele = evt.target as HTMLElement;
     const is_button = ele && ele.tagName == 'BUTTON';
 
@@ -197,10 +195,10 @@ function handle_click_event(evt: Event) {
 
     const form = parent_form as HTMLFormElement;
 
-    upsert_id(form);
+    const data = to_data(form);
 
     if (button.classList.contains('submit'))
-      return emit_submit(form.id, to_data(form));
+      return emit_submit(form.id, data);
 
     const raw_action = form.getAttribute('action') || '/';
     if (raw_action.indexOf('/') !== 0)
@@ -210,7 +208,7 @@ function handle_click_event(evt: Event) {
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    fetch_form('POST', form);
+    fetch_form('POST', form, data);
     return false;
 } // function
 
