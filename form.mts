@@ -7,24 +7,22 @@ import { warn } from './log.mts';
 
 // import type { Request_Origin, Response_Origin } from './types.mjs';
 
-const THIS_ORIGIN = (new URL(window.location.href)).origin;
-
-// function GET(form_ele) { return fetch_form('GET', form_ele); };
-function POST(form_ele: HTMLFormElement) { return fetch_form('POST', form_ele); };
+const THIS_ORIGIN                 = (new URL(window.location.href)).origin;
+const NO_CACHE: RequestCache      = "no-cache";
+const NO_REFERRER: ReferrerPolicy = "no-referrer";
 
 export const FORMALIZED = "formalized";
 
-export function setup_events() {
+export function dom_init() {
   const is_setup = document.body.classList.contains(FORMALIZED);
   if (is_setup)
     return false;
-
-  document.body.addEventListener('click', on_click_button);
+  document.body.addEventListener('click', handle_click_event);
   document.body.classList.add(FORMALIZED);
   return true;
 } // function
 
-setup_events();
+dom_init();
 
 export function path_to_url(x: string) {
   return new URL(x, THIS_ORIGIN);
@@ -55,35 +53,6 @@ export function invalid_fields(form: HTMLFormElement, fields: { [index: string]:
   return form;
 }
 
-
-export function on_click_button(ev: MouseEvent) {
-  const ele =  ev.target && (ev.target as Element).tagName && (ev.target as Element);
-
-  if (!ele)
-    return false;
-
-  if (ele.tagName !== 'BUTTON')
-    return false;
-
-  const button = ele as HTMLButtonElement;
-
-  const form = button.closest('form');
-  if (!form) {
-    warn('Form not found for: ' + button.tagName);
-    return false;
-  }
-
-  ev.preventDefault();
-  ev.stopPropagation();
-
-  upsert_id(form);
-
-  if (button.classList.contains('submit'))
-    return emit_submit(form.id, to_data(form));
-
-  warn(`Unknown action for form: ${form.id}`);
-  return false;
-} // === function
 
 export function event_allow_only_numbers(event: Event) {
   const ev = event as KeyboardEvent;
@@ -119,8 +88,8 @@ export function fetch_form(method: string, form_ele: HTMLFormElement) {
     action : raw_action,
     fetch  : {
       method,
-      cache         : "no-cache",
-      referrerPolicy: "no-referrer",
+      cache         : NO_CACHE,
+      referrerPolicy: NO_REFERRER,
       headers       : {
         "Content-Type": "application/json",
         X_SENT_FROM: form_ele.id
@@ -212,16 +181,28 @@ function run_network_error(data: Record<string, any>) {
   return false;
 } // === function
 
-
-export function init() {
-  document.body.addEventListener('click', function (evt) {
+function handle_click_event(evt: Event) {
     const ele = evt.target as HTMLElement;
-    const form_ele = ele && ele.tagName == 'BUTTON' && (ele as HTMLButtonElement).type == 'submit' && ele.closest('FORM')
+    const is_button = ele && ele.tagName == 'BUTTON';
 
-    if (!form_ele)
+    if (!is_button)
       return false;
 
-    const raw_action = form_ele.getAttribute('action') || '/';
+    const button = ele as HTMLButtonElement;
+
+    const parent_form = button.type == 'submit' && button.closest('FORM');
+
+    if (!parent_form)
+      return false;
+
+    const form = parent_form as HTMLFormElement;
+
+    upsert_id(form);
+
+    if (button.classList.contains('submit'))
+      return emit_submit(form.id, to_data(form));
+
+    const raw_action = form.getAttribute('action') || '/';
     if (raw_action.indexOf('/') !== 0)
       return false;
 
@@ -229,8 +210,7 @@ export function init() {
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    POST(form_ele as HTMLFormElement);
+    fetch_form('POST', form);
     return false;
-  }); // attachEventListener
-} //
+} // function
 
