@@ -12,6 +12,20 @@ const THIS_ORIGIN = (new URL(window.location.href)).origin;
 // function GET(form_ele) { return fetch_form('GET', form_ele); };
 function POST(form_ele: HTMLFormElement) { return fetch_form('POST', form_ele); };
 
+export const FORMALIZED = "formalized";
+
+export function setup_events() {
+  const is_setup = document.body.classList.contains(FORMALIZED);
+  if (is_setup)
+    return false;
+
+  document.body.addEventListener('click', on_click_button);
+  document.body.classList.add(FORMALIZED);
+  return true;
+} // function
+
+setup_events();
+
 export function path_to_url(x: string) {
   return new URL(x, THIS_ORIGIN);
 } // func
