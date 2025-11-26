@@ -1,6 +1,6 @@
 
 
-import { emit, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
+import { emit, not_ok as emit_not_ok, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
 import { upsert_id } from './dom.mts';
 import { status as style_status } from './css.mts';
 import { warn } from './log.mts';
@@ -75,6 +75,39 @@ export function input_only_numbers(selector: string) {
   );
 } // === function
 
+function handle_button_submit_event(evt: Event) {
+    const ele = evt.target as HTMLElement;
+    const is_button = ele && ele.tagName == 'BUTTON';
+
+    if (!is_button)
+      return false;
+
+    const button = ele as HTMLButtonElement;
+
+    const parent_form = button.type == 'submit' && button.closest('FORM');
+
+    if (!parent_form)
+      return false;
+
+    const form = parent_form as HTMLFormElement;
+
+    const data = to_data(form);
+
+    if (button.classList.contains('submit'))
+      return emit_submit(form.id, data);
+
+    const raw_action = form.getAttribute('action') || '/';
+    if (raw_action.indexOf('/') !== 0)
+      return false;
+
+    evt.preventDefault();
+    evt.stopPropagation();
+    evt.stopImmediatePropagation();
+
+    fetch_form('POST', form, data);
+    return false;
+} // function
+
 export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Record<string, any>) {
   const raw_action = form_ele.getAttribute('action') || '/';
   const url        = path_to_url(raw_action);
@@ -111,7 +144,8 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
 
 async function run_response(data: Record<string, any>) {
   const {request, response} = data;
-  if (!response.ok) {
+
+  if (!response.ok) { // There was an HTTP error.
     run_server_error(data);
     return data;
   }
@@ -130,9 +164,10 @@ async function run_response(data: Record<string, any>) {
     return json;
   }
 
+  const e_id = request.dom_id;
   const e = document.getElementById(request.dom_id);
 
-  emit_response(request, response);
+  emit_response(e_id, {request, response, ...json});
 
 
   const status = json.status;
@@ -147,6 +182,19 @@ async function run_response(data: Record<string, any>) {
 
   return data;
 } // async run_response
+
+function run_not_ok(data: Record<string, any>) {
+  const {request, response} = data;
+  emit_not_ok(data);
+
+  const e = document.getElementById(request.dom_id);
+  if (e) {
+    style_status.update(e, 'server_error');
+    return true;
+  }
+
+  return false;
+}
 
 function run_server_error(data: Record<string, any>) {
   const {request, response} = data;
@@ -178,37 +226,4 @@ function run_network_error(data: Record<string, any>) {
 
   return false;
 } // === function
-
-function handle_button_submit_event(evt: Event) {
-    const ele = evt.target as HTMLElement;
-    const is_button = ele && ele.tagName == 'BUTTON';
-
-    if (!is_button)
-      return false;
-
-    const button = ele as HTMLButtonElement;
-
-    const parent_form = button.type == 'submit' && button.closest('FORM');
-
-    if (!parent_form)
-      return false;
-
-    const form = parent_form as HTMLFormElement;
-
-    const data = to_data(form);
-
-    if (button.classList.contains('submit'))
-      return emit_submit(form.id, data);
-
-    const raw_action = form.getAttribute('action') || '/';
-    if (raw_action.indexOf('/') !== 0)
-      return false;
-
-    evt.preventDefault();
-    evt.stopPropagation();
-    evt.stopImmediatePropagation();
-
-    fetch_form('POST', form, data);
-    return false;
-} // function
 
