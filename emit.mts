@@ -1,8 +1,9 @@
 
 import { standard_name } from './string.mts';
 import { warn } from './log.mts';
-import { reset as css_reset, reset_to as css_reset_to } from './css.mts';
+import { reset_status, update_status } from './css.mts';
 import type { Request_Origin, Response_Origin } from './types.mts';
+import { CSS_States } from './types.mts';
 
 export function emit(raw_name: string, data: Record<string, any>) {
   const model_name = standard_name(raw_name);
@@ -65,48 +66,48 @@ export async function response(req: Request_Origin, raw_resp: Response) {
   document.body.dispatchEvent(new CustomEvent(`${req.dom_id} response`, detail));
 
   if (e)
-    css_reset(req.dom_id);
+    reset_status(req.dom_id);
 
   return status(resp, req);
 } // async function
 
 // export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
 export function status(resp: Response_Origin, req: Request_Origin) {
-  const status = resp.status;
+  const status = resp.status as typeof CSS_States[number];
   const detail = {detail: {response: resp, request: req}};
-  css_reset_to(status, req.dom_id);
+  update_status(req.dom_id, status);
   document.body.dispatchEvent(new CustomEvent(`* ${status}`, detail));
   document.body.dispatchEvent(new CustomEvent(`${req.dom_id} ${status}`, detail));
 }
 
 // export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
 export function server_error(req: Request_Origin, raw_resp: Response) {
-    warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
+  warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
 
-    const e = document.getElementById(req.dom_id);
-    if (e) {
-      css_reset_to('server_error', req.dom_id);
-      const detail = {detail: {request: req, response: raw_resp}};
-      document.body.dispatchEvent(new CustomEvent('* server_error', detail));
-      document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
-      return true;
-    }
-    return false;
+  const e = document.getElementById(req.dom_id);
+  if (e) {
+    update_status(req.dom_id, 'server_error');
+    const detail = {detail: {request: req, response: raw_resp}};
+    document.body.dispatchEvent(new CustomEvent('* server_error', detail));
+    document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
+    return true;
   }
+  return false;
+}
 
 // export function network_error(model_name: string, data: Record<string, any>) { return emit(`network_error ${model_name}`, data); };
 export function network_error(error: any, request: Request_Origin) {
-    warn(error);
-    warn(`!!! Network error: ${error.message}`);
-    const detail = {detail: {error, request}};
-    document.body.dispatchEvent(new CustomEvent('* network_error', detail));
-    document.body.dispatchEvent(new CustomEvent(`${request.dom_id} network_error`, detail));
+  warn(error);
+  warn(`!!! Network error: ${error.message}`);
+  const detail = {detail: {error, request}};
+  document.body.dispatchEvent(new CustomEvent('* network_error', detail));
+  document.body.dispatchEvent(new CustomEvent(`${request.dom_id} network_error`, detail));
 
-    const e = document.getElementById(request.dom_id);
-    if (e) {
-      css_reset_to('network_error', e);
-      return true;
-    }
+  const e = document.getElementById(request.dom_id);
+  if (e) {
+    update_status(e, 'network_error');
+    return true;
+  }
 
-    return false;
-  } // === function
+  return false;
+} // === function
