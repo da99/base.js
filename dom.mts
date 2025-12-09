@@ -1,4 +1,11 @@
 
+import type { ElementTagNameMap, Attrs } from './types.mts';
+export type Element_Function = <T extends keyof ElementTagNameMap>(tag_name: T, ...args: (string | Attrs<T> | Function)[]) => Element;
+
+export function path_to_url(x: string) {
+  return new URL(x, (new URL(window.location.href)).origin);
+} // func
+
 export function fragment(f: ((x: Element_Function) => void)): DocumentFragment {
   let dom_fragment = document.createDocumentFragment();
 

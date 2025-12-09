@@ -1,8 +1,8 @@
 
 import { JSDOM } from 'jsdom';
 
-import { fragment } from './dom.mjs';
-import type { Element_Function } from './dom.mjs';
+import { fragment } from '../../dom.mts';
+import type { Element_Function } from '../../dom.mts';
 
 export const page = new JSDOM(`<!DOCTYPE html><html lang="en"><head><title></title></head><body></body></html>`)
 global.window = page.window;

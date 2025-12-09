@@ -2,11 +2,11 @@
 export type Element_Function = <T extends keyof ElementTagNameMap>(tag_name: T, ...args: (string | Attrs<T> | Function)[]) => Element;
 type ElementBody = ((f: typeof element) => Element | void);
 
-import type { Attrs } from './types.mts';
+import type { Attrs } from '../../types.mts';
 
 import { split_id_class } from './main.mts';
-import { fragment } from './dom.mts';
-import { is_plain_object } from 'base.js/src/is.mts';
+import { fragment } from '../../dom.mts';
+import { is_plain_object } from '../../is.mts';
 
 
 export function to_element(x: string | HTMLElement): HTMLElement | null {

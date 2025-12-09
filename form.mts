@@ -1,17 +1,16 @@
 
 
 import { emit, not_ok as emit_not_ok, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
-import { upsert_id } from './dom.mts';
+import { upsert_id, path_to_url } from './dom.mts';
 import { status as style_status } from './css.mts';
 import { warn } from './log.mts';
 
 // import type { Request_Origin, Response_Origin } from './types.mjs';
 
-const THIS_ORIGIN                 = (new URL(window.location.href)).origin;
 const NO_CACHE: RequestCache      = "no-cache";
 const NO_REFERRER: ReferrerPolicy = "no-referrer";
 
-export const FORMALIZED = "formalized";
+const FORMALIZED = "formalized";
 
 export function dom_init() {
   const is_setup = document.body.classList.contains(FORMALIZED);
@@ -24,9 +23,7 @@ export function dom_init() {
 
 dom_init();
 
-export function path_to_url(x: string) {
-  return new URL(x, THIS_ORIGIN);
-} // func
+
 
 export function to_data(form_ele: HTMLFormElement) {
   const raw_data = new FormData(form_ele);
