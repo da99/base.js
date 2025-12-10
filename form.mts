@@ -12,12 +12,24 @@ const NO_REFERRER: ReferrerPolicy = "no-referrer";
 
 const FORMALIZED = "formalized";
 
+function form_init(frm: HTMLFormElement) {
+  if (frm.classList.contains(FORMALIZED))
+    return frm;
+
+  frm.addEventListener('submit', handle_form_submit_event)
+  frm.classList.add(FORMALIZED);
+  return frm;
+} // function
+
 export function dom_init() {
+  document.body.querySelectorAll('form').forEach(frm => form_init(frm));
+
   const is_setup = document.body.classList.contains(FORMALIZED);
   if (is_setup)
     return false;
   document.body.addEventListener('click', handle_button_submit_event);
   document.body.classList.add(FORMALIZED);
+
   return true;
 } // function
 
@@ -72,6 +84,17 @@ export function input_only_numbers(selector: string) {
   );
 } // === function
 
+function handle_form_submit_event(evt: Event) {
+  evt.preventDefault();
+  evt.stopPropagation();
+  evt.stopImmediatePropagation();
+  const frm = evt.target as HTMLFormElement;
+  if (frm) {
+    submit_the_form(frm)
+  }
+  return frm;
+} // function
+
 function handle_button_submit_event(evt: Event) {
     const ele = evt.target as HTMLElement;
     const is_button = ele && ele.tagName == 'BUTTON';
@@ -81,28 +104,27 @@ function handle_button_submit_event(evt: Event) {
 
     const button = ele as HTMLButtonElement;
 
-    const parent_form = button.type == 'submit' && button.closest('FORM');
+    const parent_form = (button.type == 'submit' || button.classList.contains('submit')) && button.closest('FORM');
 
     if (!parent_form)
-      return false;
-
-    const form = parent_form as HTMLFormElement;
-
-    const data = to_data(form);
-
-    if (button.classList.contains('submit'))
-      return emit_submit(form.id, data);
-
-    const raw_action = form.getAttribute('action') || '/';
-    if (raw_action.indexOf('/') !== 0)
       return false;
 
     evt.preventDefault();
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    fetch_form('POST', form, data);
+    submit_the_form(parent_form as HTMLFormElement)
     return false;
+} // function
+
+function submit_the_form(form: HTMLFormElement) {
+  const raw_action = form.getAttribute('action') || '/';
+  if (raw_action.indexOf('/') !== 0)
+    return form;
+  const data = to_data(form);
+  emit_submit(form.id, data);
+  fetch_form(form.method || 'POST', form, data);
+  return form;
 } // function
 
 export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Record<string, any>) {
