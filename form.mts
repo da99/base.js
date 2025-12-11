@@ -1,5 +1,4 @@
 
-
 import { emit, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
 import { upsert_id, path_to_url } from './dom.mts';
 import { update_status } from './css.mts';
@@ -94,27 +93,27 @@ function handle_form_submit_event(evt: Event) {
   return frm;
 } // function
 
-function handle_button_submit_event(evt: Event) {
-    const ele = evt.target as HTMLElement;
-    const is_button = ele && ele.tagName == 'BUTTON';
-
-    if (!is_button)
-      return false;
-
-    const button = ele as HTMLButtonElement;
-
-    const parent_form = (button.type == 'submit' || button.classList.contains('submit')) && button.closest('FORM');
-
-    if (!parent_form)
-      return false;
-
-    evt.preventDefault();
-    evt.stopPropagation();
-    evt.stopImmediatePropagation();
-
-    submit_the_form(parent_form as HTMLFormElement)
-    return false;
-} // function
+// function handle_button_submit_event(evt: Event) {
+//     const ele = evt.target as HTMLElement;
+//     const is_button = ele && ele.tagName == 'BUTTON';
+//
+//     if (!is_button)
+//       return false;
+//
+//     const button = ele as HTMLButtonElement;
+//
+//     const parent_form = (button.type == 'submit' || button.classList.contains('submit')) && button.closest('FORM');
+//
+//     if (!parent_form)
+//       return false;
+//
+//     evt.preventDefault();
+//     evt.stopPropagation();
+//     evt.stopImmediatePropagation();
+//
+//     submit_the_form(parent_form as HTMLFormElement)
+//     return false;
+// } // function
 
 function submit_the_form(form: HTMLFormElement) {
   const raw_action = form.getAttribute('action') || '/';
