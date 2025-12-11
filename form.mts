@@ -1,8 +1,8 @@
 
 
-import { emit, not_ok as emit_not_ok, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
+import { emit, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
 import { upsert_id, path_to_url } from './dom.mts';
-import { status as style_status } from './css.mts';
+import { update_status } from './css.mts';
 import { warn } from './log.mts';
 
 // import type { Request_Origin, Response_Origin } from './types.mjs';
@@ -24,17 +24,16 @@ function form_init(frm: HTMLFormElement) {
 export function dom_init() {
   document.body.querySelectorAll('form').forEach(frm => form_init(frm));
 
-  const is_setup = document.body.classList.contains(FORMALIZED);
-  if (is_setup)
-    return false;
-  document.body.addEventListener('click', handle_button_submit_event);
-  document.body.classList.add(FORMALIZED);
-
-  return true;
+  // const is_setup = document.body.classList.contains(FORMALIZED);
+  // if (is_setup)
+  //   return false;
+  //
+  // document.body.classList.add(FORMALIZED);
+  //
+  // return true;
 } // function
 
 dom_init();
-
 
 
 export function to_data(form_ele: HTMLFormElement) {
@@ -150,7 +149,7 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
 
   emit_request(request.dom_id, request);
 
-  style_status.update(form_ele.id, 'loading');
+  update_status(form_ele.id, 'loading');
 
   setTimeout(async () => {
     fetch(url, request.fetch)
@@ -193,7 +192,7 @@ async function run_response(data: Record<string, any>) {
   const new_data = {status, json, ...data};
 
   if (e)
-    style_status.update(e, json.status);
+    update_status(e, json.status);
 
   warn(`STATUS: ${status}: ${request.dom_id} ${request.action}`);
   emit_status(request, response);
@@ -202,18 +201,18 @@ async function run_response(data: Record<string, any>) {
   return data;
 } // async run_response
 
-function run_not_ok(data: Record<string, any>) {
-  const {request, response} = data;
-  emit_not_ok(data);
-
-  const e = document.getElementById(request.dom_id);
-  if (e) {
-    style_status.update(e, 'server_error');
-    return true;
-  }
-
-  return false;
-}
+// function run_not_ok(data: Record<string, any>) {
+//   const {request, response} = data;
+//   emit_not_ok(data);
+//
+//   const e = document.getElementById(request.dom_id);
+//   if (e) {
+//     style_status.update(e, 'server_error');
+//     return true;
+//   }
+//
+//   return false;
+// }
 
 function run_server_error(data: Record<string, any>) {
   const {request, response} = data;
@@ -223,7 +222,7 @@ function run_server_error(data: Record<string, any>) {
 
   const e = document.getElementById(request.dom_id);
   if (e) {
-    style_status.update(e, 'server_error');
+    update_status(e, 'server_error');
     return true;
   }
 
@@ -239,7 +238,7 @@ function run_network_error(data: Record<string, any>) {
 
   const e = document.getElementById(request.dom_id);
   if (e) {
-    style_status.update(e, 'network_error');
+    update_status(e, 'network_error');
     return true;
   }
 
