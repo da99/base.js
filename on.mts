@@ -12,6 +12,7 @@ export function on(raw_name: string, f: Custom_Event_Handler) {
 
 export function before(name: string, f: Custom_Event_Handler) { return on(`before ${name}`, f); };
 export function after(name: string, f: Custom_Event_Handler) { return on(`after ${name}`,  f); };
+export function success(name: string, f: Custom_Event_Handler) { return on(`success ${name}`, f); };
 export function network_error(name: string, f: Custom_Event_Handler) { return on(`network_error ${name}`, f); };
 export function server_error(name: string, f: Custom_Event_Handler) { return on(`server_error ${name}`, f); };
 export function submit(name: string, f: Custom_Event_Handler) { return on(`submit ${name}`, f); };
