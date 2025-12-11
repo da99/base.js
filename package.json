@@ -1,8 +1,7 @@
 {
   "name": "base.js",
   "files": [
-    "*.mts",
-    "*.mjs"
+    "*.mts"
   ],
   "type": "module",
   "devDependencies": {
