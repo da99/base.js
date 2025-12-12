@@ -15,12 +15,13 @@ function form_init(frm: HTMLFormElement) {
   if (frm.classList.contains(FORMALIZED))
     return frm;
 
+  console.log(`Formalized: ${frm.id}`)
   frm.addEventListener('submit', handle_form_submit_event)
   frm.classList.add(FORMALIZED);
   return frm;
 } // function
 
-export function dom_init() {
+export function setup() {
   document.body.querySelectorAll('form').forEach(frm => form_init(frm));
 
   // const is_setup = document.body.classList.contains(FORMALIZED);
@@ -31,9 +32,6 @@ export function dom_init() {
   //
   // return true;
 } // function
-
-dom_init();
-
 
 export function to_data(form_ele: HTMLFormElement) {
   const raw_data = new FormData(form_ele);
