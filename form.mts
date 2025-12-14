@@ -216,15 +216,17 @@ function run_server_error(data: Record<string, any>) {
   warn(`!!! Server Error: ${response.status} - ${response.statusText}`);
 
   emit('server_error', data);
-
-  const e = document.getElementById(request.dom_id);
-  if (e) {
-    update_status(e, 'server_error');
-    return true;
+  if (request && request.dom_id) {
+    emit(`server_error ${request.dom_id}`, data);
+    const e = document.getElementById(request.dom_id);
+    if (e) {
+      update_status(e, 'server_error');
+      return true;
+    }
   }
 
   return false;
-}
+} // function
 
 function run_network_error(data: Record<string, any>) {
   const {error, request} = data;
