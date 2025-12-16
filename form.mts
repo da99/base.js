@@ -1,8 +1,9 @@
 
-import { emit, request as emit_request, response as emit_response, status as emit_status, submit as emit_submit } from './emit.mts';
+import { emit, emit_request, emit_response, emit_status, emit_submit } from './emit.mts';
 import { upsert_id, path_to_url } from './dom.mts';
 import { update_status } from './css.mts';
 import { warn } from './log.mts';
+import type { Request_Origin, Response_Origin } from './types.mts';
 
 // import type { Request_Origin, Response_Origin } from './types.mjs';
 
@@ -151,19 +152,18 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
 
   setTimeout(async () => {
     fetch(url, request.fetch)
-      .then((response) => run_response({request, response}))
+      .then((response) => run_response(request, response))
       .catch((error) => run_network_error({error, request}));
   }, 450);
 
   return true;
 } // fetch_form
 
-async function run_response(data: Record<string, any>) {
-  const {request, response} = data;
+async function run_response(request: Request_Origin, response, Response_Origin) {
 
   if (!response.ok) { // There was an HTTP error.
-    run_server_error(data);
-    return data;
+    run_server_error(request, response);
+    return {request, response};
   }
 
   const json = (await response.json());
@@ -180,14 +180,14 @@ async function run_response(data: Record<string, any>) {
     return json;
   }
 
-  const e_id = request.dom_id;
+  const e_id = request.dom_id as string;
   const e = document.getElementById(request.dom_id);
 
   emit_response(e_id, {request, response, ...json});
 
 
   const status = json.status;
-  const new_data = {status, json, ...data};
+  const new_data = {status, json, request, response};
 
   if (e)
     update_status(e, json.status);
@@ -196,7 +196,7 @@ async function run_response(data: Record<string, any>) {
   emit_status(request, response);
   emit(`${response.status} ${request.dom_id}`, new_data);
 
-  return data;
+  return {request, response};
 } // async run_response
 
 // function run_not_ok(data: Record<string, any>) {
@@ -212,13 +212,12 @@ async function run_response(data: Record<string, any>) {
 //   return false;
 // }
 
-function run_server_error(data: Record<string, any>) {
-  const {request, response} = data;
+function run_server_error(request: Request_Origin, response: Response_Origin) {
   warn(`!!! Server Error: ${response.ok} ${response.status} - ${response.statusText}`);
 
-  emit('server_error', data);
+  emit('server_error', {request, response});
   if (request && request.dom_id) {
-    emit(`server_error ${request.dom_id}`, data);
+    emit(`server_error ${request.dom_id}`, {request, response});
     const e = document.getElementById(request.dom_id);
     if (e) {
       update_status(e, 'server_error');

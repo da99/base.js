@@ -32,7 +32,7 @@ export function emit_after(model_name: string, data: Record<string, any>) { retu
 export function emit_submit(model_name: string, data: Record<string, any>) { return emit(`submit ${model_name}`,    data); };
 export function emit_request(model_name: string, data: Record<string, any>) { return emit(`request ${model_name}`,   data); };
 
-export function emit_ok(model_name: string, data: Record<string, any>) { return emit(`ok ${model_name}`,        data); };
+export function emit_ok(model_name: string, data: Record<string, any>) { return emit(`ok ${model_name}`, data); };
 export function emit_invalid(model_name: string, data: Record<string, any>) { return emit(`invalid ${model_name}`,   data); };
 export function emit_try_again(model_name: string, data: Record<string, any>) { return emit(`try_again ${model_name}`, data); };
 export function emit_not_yet(model_name: string, data: Record<string, any>) { return emit(`not_yet ${model_name}`,   data); };
@@ -40,9 +40,9 @@ export function emit_expired(model_name: string, data: Record<string, any>) { re
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
-export async function response(req: Request_Origin, raw_resp: Response) {
+export async function emit_response(req: Request_Origin, raw_resp: Response) {
   if (!raw_resp.ok)
-    return server_error(req, raw_resp);
+    return emit_server_error(req, raw_resp);
 
   const resp: Response_Origin = (await raw_resp.json()) as Response_Origin;
 
@@ -68,11 +68,11 @@ export async function response(req: Request_Origin, raw_resp: Response) {
   if (e)
     reset_status(req.dom_id);
 
-  return status(resp, req);
+  return emit_status(resp, req);
 } // async function
 
 // export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
-export function status(resp: Response_Origin, req: Request_Origin) {
+export function emit_status(resp: Response_Origin, req: Request_Origin) {
   const status = resp.status as typeof CSS_States[number];
   const detail = {detail: {response: resp, request: req}};
   update_status(req.dom_id, status);
@@ -81,7 +81,7 @@ export function status(resp: Response_Origin, req: Request_Origin) {
 }
 
 // export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
-export function server_error(req: Request_Origin, raw_resp: Response) {
+export function emit_server_error(req: Request_Origin, raw_resp: Response) {
   warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
   warn(req)
 
@@ -97,7 +97,7 @@ export function server_error(req: Request_Origin, raw_resp: Response) {
 }
 
 // export function network_error(model_name: string, data: Record<string, any>) { return emit(`network_error ${model_name}`, data); };
-export function network_error(error: any, request: Request_Origin) {
+export function emit_network_error(error: any, request: Request_Origin) {
   warn(error);
   warn(`!!! Network error: ${error.message}`);
   const detail = {detail: {error, request}};
