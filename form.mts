@@ -115,10 +115,11 @@ function handle_form_submit_event(evt: Event) {
 
 function submit_the_form(form: HTMLFormElement) {
   const raw_action = form.getAttribute('action') || '/';
-  if (raw_action.indexOf('/') !== 0)
-    return form;
   const data = to_data(form);
   emit_submit(form.id, data);
+  if (raw_action.indexOf('/') !== 0)
+    return form;
+
   fetch_form(form.method || 'POST', form, data);
   return form;
 } // function
