@@ -214,7 +214,7 @@ async function run_response(data: Record<string, any>) {
 
 function run_server_error(data: Record<string, any>) {
   const {request, response} = data;
-  warn(`!!! Server Error: ${response.status} - ${response.statusText}`);
+  warn(`!!! Server Error: ${response.ok} ${response.status} - ${response.statusText}`);
 
   emit('server_error', data);
   if (request && request.dom_id) {

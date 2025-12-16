@@ -26,17 +26,17 @@ export function emit_raw(raw_name: string, data: Record<string, any>) {
   return document.body.dispatchEvent(new CustomEvent(model_name, main));
 }
 
-export function before(model_name: string, data: Record<string, any>) { return emit_raw(`before ${model_name}`, data); };
-export function after(model_name: string, data: Record<string, any>) { return emit_raw(`after ${model_name}`,  data); };
+export function emit_before(model_name: string, data: Record<string, any>) { return emit_raw(`before ${model_name}`, data); };
+export function emit_after(model_name: string, data: Record<string, any>) { return emit_raw(`after ${model_name}`,  data); };
 
-export function submit(model_name: string, data: Record<string, any>) { return emit(`submit ${model_name}`,    data); };
-export function request(model_name: string, data: Record<string, any>) { return emit(`request ${model_name}`,   data); };
+export function emit_submit(model_name: string, data: Record<string, any>) { return emit(`submit ${model_name}`,    data); };
+export function emit_request(model_name: string, data: Record<string, any>) { return emit(`request ${model_name}`,   data); };
 
-export function ok(model_name: string, data: Record<string, any>) { return emit(`ok ${model_name}`,        data); };
-export function invalid(model_name: string, data: Record<string, any>) { return emit(`invalid ${model_name}`,   data); };
-export function try_again(model_name: string, data: Record<string, any>) { return emit(`try_again ${model_name}`, data); };
-export function not_yet(model_name: string, data: Record<string, any>) { return emit(`not_yet ${model_name}`,   data); };
-export function expired(model_name: string, data: Record<string, any>) { return emit(`expired ${model_name}`,   data); };
+export function emit_ok(model_name: string, data: Record<string, any>) { return emit(`ok ${model_name}`,        data); };
+export function emit_invalid(model_name: string, data: Record<string, any>) { return emit(`invalid ${model_name}`,   data); };
+export function emit_try_again(model_name: string, data: Record<string, any>) { return emit(`try_again ${model_name}`, data); };
+export function emit_not_yet(model_name: string, data: Record<string, any>) { return emit(`not_yet ${model_name}`,   data); };
+export function emit_expired(model_name: string, data: Record<string, any>) { return emit(`expired ${model_name}`,   data); };
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
@@ -83,6 +83,7 @@ export function status(resp: Response_Origin, req: Request_Origin) {
 // export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
 export function server_error(req: Request_Origin, raw_resp: Response) {
   warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
+  warn(req)
 
   const e = document.getElementById(req.dom_id);
   if (e) {
