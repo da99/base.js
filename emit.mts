@@ -6,37 +6,37 @@ import type { Request_Origin, Response_Origin } from './types.mts';
 import { CSS_States } from './types.mts';
 
 export function emit(raw_name: string, data: Record<string, any>) {
-  const model_name = standard_name(raw_name);
-  const asterisk   = {detail: {model_name, ...data}};
+  const dom_id = standard_name(raw_name);
+  const asterisk   = {detail: {model_name: dom_id, ...data}};
   const main       = {detail: data};
 
   document.body.dispatchEvent(new CustomEvent(`before *`, asterisk));
-  document.body.dispatchEvent(new CustomEvent(`before ${model_name}`, main));
+  document.body.dispatchEvent(new CustomEvent(`before ${dom_id}`, main));
   document.body.dispatchEvent(new CustomEvent('*', asterisk));
-  const result = document.body.dispatchEvent(new CustomEvent(model_name, main));
-  document.body.dispatchEvent(new CustomEvent(`after ${model_name}`, main));
+  const result = document.body.dispatchEvent(new CustomEvent(dom_id, main));
+  document.body.dispatchEvent(new CustomEvent(`after ${dom_id}`, main));
   document.body.dispatchEvent(new CustomEvent(`after *`, asterisk));
   return result;
 }
 
-export function emit_raw(raw_name: string, data: Record<string, any>) {
+function emit_raw(raw_name: string, data: Record<string, any>) {
   const model_name = standard_name(raw_name);
   const main       = {detail: data};
 
   return document.body.dispatchEvent(new CustomEvent(model_name, main));
 }
 
-export function emit_before(model_name: string, data: Record<string, any>) { return emit_raw(`before ${model_name}`, data); };
-export function emit_after(model_name: string, data: Record<string, any>) { return emit_raw(`after ${model_name}`,  data); };
+export function emit_before(dom_id: string, data: Record<string, any>) { return emit_raw(`before ${dom_id}`, data); };
+export function emit_after(dom_id: string, data: Record<string, any>) { return emit_raw(`after ${dom_id}`,  data); };
 
-export function emit_submit(model_name: string, data: Record<string, any>) { return emit(`submit ${model_name}`,    data); };
-export function emit_request(model_name: string, data: Record<string, any>) { return emit(`request ${model_name}`,   data); };
+export function emit_submit(dom_id: string, data: Record<string, any>) { return emit(`submit ${dom_id}`,    data); };
+export function emit_request(dom_id: string, data: Record<string, any>) { return emit(`request ${dom_id}`,   data); };
 
-export function emit_ok(model_name: string, data: Record<string, any>) { return emit(`ok ${model_name}`, data); };
-export function emit_invalid(model_name: string, data: Record<string, any>) { return emit(`invalid ${model_name}`,   data); };
-export function emit_try_again(model_name: string, data: Record<string, any>) { return emit(`try_again ${model_name}`, data); };
-export function emit_not_yet(model_name: string, data: Record<string, any>) { return emit(`not_yet ${model_name}`,   data); };
-export function emit_expired(model_name: string, data: Record<string, any>) { return emit(`expired ${model_name}`,   data); };
+export function emit_ok(dom_id: string, data: Record<string, any>) { return emit(`ok ${dom_id}`, data); };
+export function emit_invalid(dom_id: string, data: Record<string, any>) { return emit(`invalid ${dom_id}`,   data); };
+export function emit_try_again(dom_id: string, data: Record<string, any>) { return emit(`try_again ${dom_id}`, data); };
+export function emit_not_yet(dom_id: string, data: Record<string, any>) { return emit(`not_yet ${dom_id}`,   data); };
+export function emit_expired(dom_id: string, data: Record<string, any>) { return emit(`expired ${dom_id}`,   data); };
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
