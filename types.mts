@@ -10,8 +10,10 @@
 export type Custom_Event_Handler = (o: Record<string, any>, e: CustomEvent) => void;
 export type Response_Handler = (resp: Response_Origin, req: Request_Origin) => void;
 export const Response_States = ['ok', 'invalid', 'try_again', 'not_yet', 'expired'] as const;
+export const HTTP_Status_Text = ['unauthorized', 'forbidden', 'not_found']
 export const Event_States = ['request', 'network_error', 'server_error', 'response', 'loading'] as const;
-export const CSS_States = [...Response_States, ...Event_States] as const;
+export const CSS_States = [...HTTP_Status_Text, ...Response_States, ...Event_States] as const;
+export const Action_Methods = ['GET', 'POST']
 
 
 export interface HTMLDataSet {
@@ -20,6 +22,7 @@ export interface HTMLDataSet {
 
 export interface Request_Origin {
   readonly request: RequestInit,
+  readonly action: typeof Action_Methods[number],
   readonly dom_id: string,
   do_request: boolean
 }

@@ -2,28 +2,25 @@
 import { standard_name } from './string.mts';
 import { warn } from './log.mts';
 import { reset_status, update_status } from './css.mts';
-import type { Request_Origin, Response_Origin } from './types.mts';
+import type { Request_Origin } from './types.mts';
 import { CSS_States } from './types.mts';
 
-export function emit(raw_name: string, data: Record<string, any>) {
-  const dom_id = standard_name(raw_name);
-  const asterisk   = {detail: {model_name: dom_id, ...data}};
-  const main       = {detail: data};
+export function emit(event_name: string, data: Record<string, unknown>) {
+  const s_event_name   = standard_name(event_name);
+  const asterisk = {detail: {event_name: s_event_name, ...data}};
+  const main     = {detail: data};
 
   document.body.dispatchEvent(new CustomEvent(`before *`, asterisk));
-  document.body.dispatchEvent(new CustomEvent(`before ${dom_id}`, main));
+  document.body.dispatchEvent(new CustomEvent(`before ${s_event_name}`, main));
   document.body.dispatchEvent(new CustomEvent('*', asterisk));
-  const result = document.body.dispatchEvent(new CustomEvent(dom_id, main));
-  document.body.dispatchEvent(new CustomEvent(`after ${dom_id}`, main));
+  const result = document.body.dispatchEvent(new CustomEvent(s_event_name, main));
+  document.body.dispatchEvent(new CustomEvent(`after ${s_event_name}`, main));
   document.body.dispatchEvent(new CustomEvent(`after *`, asterisk));
   return result;
 }
 
-function emit_raw(raw_name: string, data: Record<string, any>) {
-  const model_name = standard_name(raw_name);
-  const main       = {detail: data};
-
-  return document.body.dispatchEvent(new CustomEvent(model_name, main));
+function emit_raw(dom_id: string, data: Record<string, any>) {
+  return document.body.dispatchEvent(new CustomEvent(standard_name(dom_id), {detail: data}));
 }
 
 export function emit_before(dom_id: string, data: Record<string, any>) { return emit_raw(`before ${dom_id}`, data); };
@@ -40,55 +37,73 @@ export function emit_expired(dom_id: string, data: Record<string, any>) { return
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
-export async function emit_response(req: Request_Origin, raw_resp: Response) {
-  if (!raw_resp.ok)
-    return emit_server_error(req, raw_resp);
+interface JSON_Response {
+  request: Request_Origin,
+  response: Response,
+  json: Record<string, string | number | Object>
+}
 
-  const resp: Response_Origin = (await raw_resp.json()) as Response_Origin;
+export function emit_response(dom_id: string, data: JSON_Response) {
+  if (!data.response.ok)
+    return emit_status(dom_id, data);
 
-  const x_sent_from = raw_resp.headers.get('X_SENT_FROM');
+  const x_sent_from = data.response.headers.get('X_SENT_FROM');
 
   if (!x_sent_from) {
-    warn(`X_SENT_FROM key not found in headers: ${Array.from(raw_resp.headers.keys()).join(', ')}`);
-    return resp;
+    warn(`X_SENT_FROM key not found in headers: ${Array.from(data.response.headers.keys()).join(', ')}`);
+    return data.response;
   }
 
-  if(x_sent_from !== req.dom_id) {
-    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${req.dom_id}`);
-    return resp;
+  if(x_sent_from !== dom_id) {
+    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${dom_id}`);
+    return data.response;
   }
 
-  const e = document.getElementById(req.dom_id);
+  const e = document.getElementById(dom_id);
 
-  const detail = {detail: {response: resp, request: req}};
-
-  document.body.dispatchEvent(new CustomEvent('* response', detail));
-  document.body.dispatchEvent(new CustomEvent(`${req.dom_id} response`, detail));
+  emit_raw('response *', data)
+  emit_raw(`response ${dom_id}`, data)
 
   if (e)
-    reset_status(req.dom_id);
+    reset_status(dom_id);
 
-  return emit_status(resp, req);
+  return emit_status(dom_id, data);
 } // async function
 
+export function to_status_text(response: Response): typeof CSS_States[number] {
+  const status_number = response.status;
+  switch (status_number) {
+    case 200:
+      
+      return 'ok';
+    case 401:
+      return 'unauthorized';
+    case 403:
+      return 'forbidden';
+    case 404:
+      return 'not_found';
+  }
+  return 'server_error';
+} // function
+
 // export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
-export function emit_status(resp: Response_Origin, req: Request_Origin) {
-  const status = resp.status as typeof CSS_States[number];
-  const detail = {detail: {response: resp, request: req}};
-  update_status(req.dom_id, status);
-  document.body.dispatchEvent(new CustomEvent(`* ${status}`, detail));
-  document.body.dispatchEvent(new CustomEvent(`${req.dom_id} ${status}`, detail));
+export function emit_status(dom_id: string, data: JSON_Response) {
+  const status = to_status_text(data.response)
+  update_status(dom_id, status);
+  emit_raw(`${status} *`, data);
+  emit_raw(`${status} ${dom_id}`, data);
 }
 
 // export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
-export function emit_server_error(req: Request_Origin, raw_resp: Response) {
-  warn(`!!! Server Error: ${raw_resp.status} - ${raw_resp.statusText}`);
-  warn(req)
+export function emit_server_error(dom_id: string, data: JSON_Response) {
+  warn(`!!! Server Error: ${data.response.status} - ${data.response.statusText}`);
+  warn(data.request)
+  warn(data.response)
 
-  const e = document.getElementById(req.dom_id);
+  const e = document.getElementById(dom_id);
   if (e) {
-    update_status(req.dom_id, 'server_error');
-    const detail = {detail: {request: req, response: raw_resp}};
+    update_status(dom_id, 'server_error');
+    const detail = {detail: data};
     document.body.dispatchEvent(new CustomEvent('* server_error', detail));
     document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
     return true;

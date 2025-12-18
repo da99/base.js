@@ -134,7 +134,8 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
   const request = {
     dom_id : form_ele.id,
     action : raw_action,
-    fetch  : {
+    do_request: false,
+    request  : {
       method,
       cache         : NO_CACHE,
       referrerPolicy: NO_REFERRER,
@@ -151,19 +152,19 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
   update_status(form_ele.id, 'loading');
 
   setTimeout(async () => {
-    fetch(url, request.fetch)
+    fetch(url, request.request)
       .then((response) => run_response(request, response))
-      .catch((error) => run_network_error({error, request}));
+      .catch((error) => run_network_error(error, request));
   }, 450);
 
   return true;
 } // fetch_form
 
-async function run_response(request: Request_Origin, response, Response_Origin) {
+async function run_response(request: Request_Origin, response: Response) {
 
   if (!response.ok) { // There was an HTTP error.
-    run_server_error(request, response);
-    return {request, response};
+    emit_response(request.dom_id, {request, response, json: {}});
+    return response;
   }
 
   const json = (await response.json());
@@ -180,23 +181,8 @@ async function run_response(request: Request_Origin, response, Response_Origin) 
     return json;
   }
 
-  const e_id = request.dom_id as string;
-  const e = document.getElementById(request.dom_id);
-
-  emit_response(e_id, {request, response, ...json});
-
-
-  const status = json.status;
-  const new_data = {status, json, request, response};
-
-  if (e)
-    update_status(e, json.status);
-
-  warn(`STATUS: ${status}: ${request.dom_id} ${request.action}`);
-  emit_status(request, response);
-  emit(`${response.status} ${request.dom_id}`, new_data);
-
-  return {request, response};
+  emit_response(request.dom_id, {request, response, json});
+  return response;
 } // async run_response
 
 // function run_not_ok(data: Record<string, any>) {
@@ -212,35 +198,12 @@ async function run_response(request: Request_Origin, response, Response_Origin) 
 //   return false;
 // }
 
-function run_server_error(request: Request_Origin, response: Response_Origin) {
-  warn(`!!! Server Error: ${response.ok} ${response.status} - ${response.statusText}`);
-
-  emit('server_error', {request, response});
-  if (request && request.dom_id) {
-    emit(`server_error ${request.dom_id}`, {request, response});
-    const e = document.getElementById(request.dom_id);
-    if (e) {
-      update_status(e, 'server_error');
-      return true;
-    }
-  }
-
-  return false;
-} // function
-
-function run_network_error(data: Record<string, any>) {
-  const {error, request} = data;
+function run_network_error(error: Error, request: Request_Origin) {
   warn(`!!! Network error: ${request.dom_id} ${request.action}: ${error.message}`);
   warn(error);
 
-  emit('network_error', data);
+  emit(`network_error ${request.dom_id}`, {error, request});
 
-  const e = document.getElementById(request.dom_id);
-  if (e) {
-    update_status(e, 'network_error');
-    return true;
-  }
-
-  return false;
+  return update_status(request.dom_id, 'network_error');
 } // === function
 
