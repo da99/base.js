@@ -1,7 +1,7 @@
 
 import { standard_name } from './string.mts';
 import { warn } from './log.mts';
-import { reset_status, update_status } from './css.mts';
+import { css_reset_status, css_status } from './css.mts';
 import type { Request_Origin } from './types.mts';
 import { CSS_States } from './types.mts';
 
@@ -68,7 +68,7 @@ export function emit_response(dom_id: string, data: JSON_Response) {
   emit('response', dom_id, data)
 
   if (e)
-    reset_status(`#${dom_id}`);
+    css_reset_status(`#${dom_id}`);
 
   return emit_status(dom_id, data);
 } // async function
@@ -91,7 +91,7 @@ export function to_status_text(status_number: number, data: Record<string, unkno
 export function emit_status(dom_id: string, data: JSON_Response) {
   const status = to_status_text(data.response.status, data.json)
   warn(`New status for ${dom_id}: ${status}`)
-  update_status(dom_id, status);
+  css_status(status, dom_id);
   emit(status, dom_id, data);
 }
 
@@ -103,7 +103,7 @@ export function emit_server_error(dom_id: string, data: JSON_Response) {
 
   const e = document.getElementById(dom_id);
   if (e) {
-    update_status(dom_id, 'server_error');
+    css_status('server_error', dom_id);
     const detail = {detail: data};
     document.body.dispatchEvent(new CustomEvent('* server_error', detail));
     document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
@@ -119,5 +119,5 @@ export function emit_network_error(dom_id: string, request: Request_Origin, erro
 
   emit('network_error', dom_id, {error, request});
 
-  return update_status(dom_id, 'network_error');
+  return css_status('network_error', dom_id);
 } // === function

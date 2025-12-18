@@ -1,7 +1,7 @@
 
 import { emit_request, emit_response, emit_network_error, emit_submit } from './emit.mts';
 import { upsert_id, path_to_url } from './dom.mts';
-import { update_status } from './css.mts';
+import { css_status } from './css.mts';
 import { warn } from './log.mts';
 import type { Request_Origin } from './types.mts';
 
@@ -149,7 +149,7 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
 
   emit_request(request.dom_id, request);
 
-  update_status(form_ele.id, 'loading');
+  css_status('loading', form_ele.id);
 
   setTimeout(async () => {
     fetch(url, request.request)
