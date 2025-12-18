@@ -1,9 +1,9 @@
 
-import { emit, emit_request, emit_response, emit_status, emit_submit } from './emit.mts';
+import { emit_request, emit_response, emit_network_error, emit_submit } from './emit.mts';
 import { upsert_id, path_to_url } from './dom.mts';
 import { update_status } from './css.mts';
 import { warn } from './log.mts';
-import type { Request_Origin, Response_Origin } from './types.mts';
+import type { Request_Origin } from './types.mts';
 
 // import type { Request_Origin, Response_Origin } from './types.mjs';
 
@@ -137,9 +137,9 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
     do_request: false,
     request  : {
       method,
-      cache         : NO_CACHE,
+      cache:          NO_CACHE,
       referrerPolicy: NO_REFERRER,
-      headers       : {
+      headers: {
         "Content-Type": "application/json",
         X_SENT_FROM: form_ele.id
       },
@@ -154,14 +154,13 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
   setTimeout(async () => {
     fetch(url, request.request)
       .then((response) => run_response(request, response))
-      .catch((error) => run_network_error(error, request));
+      .catch((error) => emit_network_error(request.dom_id, request, error));
   }, 450);
 
   return true;
 } // fetch_form
 
 async function run_response(request: Request_Origin, response: Response) {
-
   if (!response.ok) { // There was an HTTP error.
     emit_response(request.dom_id, {request, response, json: {}});
     return response;
@@ -185,25 +184,4 @@ async function run_response(request: Request_Origin, response: Response) {
   return response;
 } // async run_response
 
-// function run_not_ok(data: Record<string, any>) {
-//   const {request, response} = data;
-//   emit_not_ok(data);
-//
-//   const e = document.getElementById(request.dom_id);
-//   if (e) {
-//     style_status.update(e, 'server_error');
-//     return true;
-//   }
-//
-//   return false;
-// }
-
-function run_network_error(error: Error, request: Request_Origin) {
-  warn(`!!! Network error: ${request.dom_id} ${request.action}: ${error.message}`);
-  warn(error);
-
-  emit(`network_error ${request.dom_id}`, {error, request});
-
-  return update_status(request.dom_id, 'network_error');
-} // === function
 
