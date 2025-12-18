@@ -65,11 +65,10 @@ export function emit_response(dom_id: string, data: JSON_Response) {
 
   const e = document.getElementById(dom_id);
 
-  emit_raw('response *', data)
-  emit_raw(`response ${dom_id}`, data)
+  emit('response', dom_id, data)
 
   if (e)
-    reset_status(dom_id);
+    reset_status(`#${dom_id}`);
 
   return emit_status(dom_id, data);
 } // async function
@@ -91,6 +90,7 @@ export function to_status_text(status_number: number, data: Record<string, unkno
 // export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
 export function emit_status(dom_id: string, data: JSON_Response) {
   const status = to_status_text(data.response.status, data.json)
+  warn(`New status for ${dom_id}: ${status}`)
   update_status(dom_id, status);
   emit(status, dom_id, data);
 }
