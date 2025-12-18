@@ -6,14 +6,15 @@ function _remove_hide(e: Element) { return e.classList.remove('hide'); }
 function    _add_hide(e: Element) { return e.classList.add('hide'); }
 
 export function to_node_list(selector: string): NodeListOf<Element> {
-  const e = document.getElementById(selector);
-  if (e)
-    return document.querySelectorAll(`#${selector}`);
+  if (selector[0] !== '#') {
+    if (document.getElementById(selector))
+      return document.querySelectorAll(`#${selector}`);
+  }
   return document.querySelectorAll(selector);
 }
 
 
-export function unhide(selector : string): NodeListOf<Element> {
+export function unhide(selector: string): NodeListOf<Element> {
   const nl = to_node_list(selector);
   nl.forEach(_remove_hide);
   return nl;

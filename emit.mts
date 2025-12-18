@@ -23,9 +23,9 @@ export function emit(event_name: string, dom_id: string, data: Record<string, un
   return result;
 }
 
-function emit_raw(dom_id: string, data: Record<string, any>) {
-  return document.body.dispatchEvent(new CustomEvent(standard_name(dom_id), {detail: data}));
-}
+// function emit_raw(dom_id: string, data: Record<string, any>) {
+//   return document.body.dispatchEvent(new CustomEvent(standard_name(dom_id), {detail: data}));
+// }
 
 // export function emit_before(dom_id: string, data: Record<string, any>) { return emit_raw(`before ${dom_id}`, data); };
 // export function emit_after(dom_id: string, data: Record<string, any>) { return emit_raw(`after ${dom_id}`,  data); };
@@ -34,10 +34,10 @@ export function emit_submit(dom_id: string, data: Record<string, any>) { return 
 export function emit_request(dom_id: string, data: Record<string, any>) { return emit('request', dom_id,   data); };
 
 export function emit_ok(dom_id: string, data: Record<string, any>) { return emit('ok', dom_id, data); };
-export function emit_invalid(dom_id: string, data: Record<string, any>) { return emit(`invalid ${dom_id}`,   data); };
-export function emit_try_again(dom_id: string, data: Record<string, any>) { return emit(`try_again ${dom_id}`, data); };
-export function emit_not_yet(dom_id: string, data: Record<string, any>) { return emit(`not_yet ${dom_id}`,   data); };
-export function emit_expired(dom_id: string, data: Record<string, any>) { return emit(`expired ${dom_id}`,   data); };
+export function emit_invalid(dom_id: string, data: Record<string, any>) { return emit('invalid', dom_id,   data); };
+export function emit_try_again(dom_id: string, data: Record<string, any>) { return emit('try_again', dom_id, data); };
+export function emit_not_yet(dom_id: string, data: Record<string, any>) { return emit('not_yet', dom_id,   data); };
+export function emit_expired(dom_id: string, data: Record<string, any>) { return emit('expired', dom_id,   data); };
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
