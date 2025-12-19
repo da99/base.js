@@ -13,6 +13,7 @@ const NO_REFERRER: ReferrerPolicy = "no-referrer";
 const FORMALIZED = "formalized";
 
 function form_init(frm: HTMLFormElement) {
+  upsert_id(frm);
   if (frm.classList.contains(FORMALIZED))
     return frm;
 
@@ -117,7 +118,7 @@ function handle_form_submit_event(evt: Event) {
 function submit_the_form(form: HTMLFormElement) {
   const raw_action = form.getAttribute('action') || '/';
   const data = to_data(form);
-  emit_submit(form.id, data);
+  emit_submit(`#${form.id}`, data);
   if (raw_action.indexOf('/') !== 0)
     return form;
 
@@ -129,10 +130,8 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
   const raw_action = form_ele.getAttribute('action') || '/';
   const url        = path_to_url(raw_action);
 
-  upsert_id(form_ele);
-
-  const request = {
-    dom_id : form_ele.id,
+  const request: Request_Origin = {
+    selector : `#${form_ele.id}`,
     action : raw_action,
     do_request: false,
     request  : {
@@ -147,14 +146,14 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
     }
   };
 
-  emit_request(request.dom_id, request);
+  emit_request(request.selector, request);
 
   css_status('loading', form_ele.id);
 
   setTimeout(async () => {
     fetch(url, request.request)
       .then((response) => run_response(request, response))
-      .catch((error) => emit_network_error(request.dom_id, request, error));
+      .catch((error) => emit_network_error(request.selector, request, error));
   }, 450);
 
   return true;
@@ -162,7 +161,7 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
 
 async function run_response(request: Request_Origin, response: Response) {
   if (!response.ok) { // There was an HTTP error.
-    emit_response(request.dom_id, {request, response, json: {}});
+    emit_response(request.selector, {request, response, json: {}});
     return response;
   }
 
@@ -175,12 +174,12 @@ async function run_response(request: Request_Origin, response: Response) {
     return response;
   }
 
-  if(x_sent_from !== request.dom_id) {
-    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${request.dom_id}`);
+  if(x_sent_from !== request.selector) {
+    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${request.selector}`);
     return json;
   }
 
-  emit_response(request.dom_id, {request, response, json});
+  emit_response(request.selector, {request, response, json});
   return response;
 } // async run_response
 

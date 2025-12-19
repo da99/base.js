@@ -23,7 +23,7 @@ export interface HTMLDataSet {
 export interface Request_Origin {
   readonly request: RequestInit,
   readonly action: typeof Action_Methods[number],
-  readonly dom_id: string,
+  readonly selector: string,  // dom selector, usually '#id'
   do_request: boolean
 }
 

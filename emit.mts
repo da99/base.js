@@ -5,20 +5,20 @@ import { css_reset_status, css_status } from './css.mts';
 import type { Request_Origin } from './types.mts';
 import { CSS_States } from './types.mts';
 
-export function emit(event_name: string, dom_id: string, data: Record<string, unknown> | JSON_Response) {
+export function emit(event_name: string, selector: string, data: Record<string, unknown> | JSON_Response) {
   const s_event_name   = standard_name(event_name);
-  const s_dom_id       = standard_name(dom_id);
-  const all            = {detail: {event_name: s_event_name, dom_id: s_dom_id, ...data}};
-  const all_event_name = {detail: {dom_id: s_dom_id, ...data}};
+  const s_selector     = standard_name(selector);
+  const all            = {detail: {event_name: s_event_name, dom_id: s_selector, ...data}};
+  const all_event_name = {detail: {dom_id: s_selector, ...data}};
   const main           = {detail: data};
 
   document.body.dispatchEvent(new CustomEvent(`before`, all));
   document.body.dispatchEvent(new CustomEvent(`before ${s_event_name}`, all_event_name));
-  document.body.dispatchEvent(new CustomEvent(`before ${s_event_name} ${s_dom_id}`, main));
+  document.body.dispatchEvent(new CustomEvent(`before ${s_event_name} ${s_selector}`, main));
   document.body.dispatchEvent(new CustomEvent('*', all));
-  const result = document.body.dispatchEvent(new CustomEvent(`${s_event_name} ${s_dom_id}`, main));
+  const result = document.body.dispatchEvent(new CustomEvent(`${s_event_name} ${s_selector}`, main));
   document.body.dispatchEvent(new CustomEvent(`after ${s_event_name}`, all_event_name));
-  document.body.dispatchEvent(new CustomEvent(`after ${s_event_name} ${s_dom_id}`, main));
+  document.body.dispatchEvent(new CustomEvent(`after ${s_event_name} ${s_selector}`, main));
   document.body.dispatchEvent(new CustomEvent(`after`, all));
   return result;
 }
@@ -30,14 +30,14 @@ export function emit(event_name: string, dom_id: string, data: Record<string, un
 // export function emit_before(dom_id: string, data: Record<string, any>) { return emit_raw(`before ${dom_id}`, data); };
 // export function emit_after(dom_id: string, data: Record<string, any>) { return emit_raw(`after ${dom_id}`,  data); };
 
-export function emit_submit(dom_id: string, data: Record<string, any>) { return emit('submit', dom_id,    data); };
-export function emit_request(dom_id: string, data: Record<string, any>) { return emit('request', dom_id,   data); };
+export function emit_submit(selector: string, data: Record<string, any>) { return emit('submit', selector,    data); };
+export function emit_request(selector: string, data: Record<string, any>) { return emit('request', selector,   data); };
 
-export function emit_ok(dom_id: string, data: Record<string, any>) { return emit('ok', dom_id, data); };
-export function emit_invalid(dom_id: string, data: Record<string, any>) { return emit('invalid', dom_id,   data); };
-export function emit_try_again(dom_id: string, data: Record<string, any>) { return emit('try_again', dom_id, data); };
-export function emit_not_yet(dom_id: string, data: Record<string, any>) { return emit('not_yet', dom_id,   data); };
-export function emit_expired(dom_id: string, data: Record<string, any>) { return emit('expired', dom_id,   data); };
+export function emit_ok(selector: string, data: Record<string, any>) { return emit('ok', selector, data); };
+export function emit_invalid(selector: string, data: Record<string, any>) { return emit('invalid', selector,   data); };
+export function emit_try_again(selector: string, data: Record<string, any>) { return emit('try_again', selector, data); };
+export function emit_not_yet(selector: string, data: Record<string, any>) { return emit('not_yet', selector,   data); };
+export function emit_expired(selector: string, data: Record<string, any>) { return emit('expired', selector,   data); };
 
 
 // export function response(model_name: string, data: Record<string, any>) { return emit(`response ${model_name}`,  data); };
@@ -47,9 +47,9 @@ interface JSON_Response {
   json: Record<string, string | number | Object>
 }
 
-export function emit_response(dom_id: string, data: JSON_Response) {
+export function emit_response(selector: string, data: JSON_Response) {
   if (!data.response.ok)
-    return emit_status(dom_id, data);
+    return emit_status(selector, data);
 
   const x_sent_from = data.response.headers.get('X_SENT_FROM');
 
@@ -58,19 +58,19 @@ export function emit_response(dom_id: string, data: JSON_Response) {
     return data.response;
   }
 
-  if(x_sent_from !== dom_id) {
-    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${dom_id}`);
+  if(selector != x_sent_from) {
+    warn(`X_SENT_FROM and dom id origin do not match: ${x_sent_from} !== ${selector}`);
     return data.response;
   }
 
-  const e = document.getElementById(dom_id);
+  const e = document.getElementById(selector);
 
-  emit('response', dom_id, data)
+  emit('response', selector, data)
 
   if (e)
-    css_reset_status(`#${dom_id}`);
+    css_reset_status(selector);
 
-  return emit_status(dom_id, data);
+  return emit_status(selector, data);
 } // async function
 
 export function to_status_text(status_number: number, data: Record<string, unknown>): typeof CSS_States[number] {
