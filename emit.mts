@@ -8,8 +8,8 @@ import { CSS_States } from './types.mts';
 export function emit(event_name: string, selector: string, data: Record<string, unknown> | JSON_Response) {
   const s_event_name   = standard_name(event_name);
   const s_selector     = standard_name(selector);
-  const all            = {detail: {event_name: s_event_name, dom_id: s_selector, ...data}};
-  const all_event_name = {detail: {dom_id: s_selector, ...data}};
+  const all            = {detail: {event_name: s_event_name, selector: s_selector, ...data}};
+  const all_event_name = {detail: {selector: s_selector, ...data}};
   const main           = {detail: data};
 
   document.body.dispatchEvent(new CustomEvent(`before * *`, all));
@@ -22,10 +22,6 @@ export function emit(event_name: string, selector: string, data: Record<string, 
   document.body.dispatchEvent(new CustomEvent(`after * *`, all));
   return result;
 }
-
-// function emit_raw(dom_id: string, data: Record<string, any>) {
-//   return document.body.dispatchEvent(new CustomEvent(standard_name(dom_id), {detail: data}));
-// }
 
 // export function emit_before(dom_id: string, data: Record<string, any>) { return emit_raw(`before ${dom_id}`, data); };
 // export function emit_after(dom_id: string, data: Record<string, any>) { return emit_raw(`after ${dom_id}`,  data); };
@@ -63,12 +59,8 @@ export function emit_response(selector: string, data: JSON_Response) {
     return data.response;
   }
 
-  const e = document.getElementById(selector);
-
   emit('response', selector, data)
-
-  if (e)
-    css_reset_status(selector);
+  css_reset_status(selector);
 
   return emit_status(selector, data);
 } // async function
@@ -88,22 +80,22 @@ export function to_status_text(status_number: number, data: Record<string, unkno
 } // function
 
 // export function status(model_name: string, data: Record<string, any>) { return emit(`status ${model_name}`,   data); };
-export function emit_status(dom_id: string, data: JSON_Response) {
+export function emit_status(selector: string, data: JSON_Response) {
   const status = to_status_text(data.response.status, data.json)
-  warn(`New status for ${dom_id}: ${status}`)
-  css_status(status, dom_id);
-  emit(status, dom_id, data);
+  warn(`New status for ${selector}: ${status}`)
+  css_status(status, selector);
+  emit(status, selector, data);
 }
 
 // export function server_error(model_name: string, data: Record<string, any>) { return emit(`server_error ${model_name}`, data); };
-export function emit_server_error(dom_id: string, data: JSON_Response) {
+export function emit_server_error(selector: string, data: JSON_Response) {
   warn(`!!! Server Error: ${data.response.status} - ${data.response.statusText}`);
   warn(data.request)
   warn(data.response)
 
-  const e = document.getElementById(dom_id);
+  const e = document.querySelector(selector);
   if (e) {
-    css_status('server_error', dom_id);
+    css_status('server_error', selector);
     const detail = {detail: data};
     document.body.dispatchEvent(new CustomEvent('* server_error', detail));
     document.body.dispatchEvent(new CustomEvent(`${e.id} server_error`, detail));
@@ -113,11 +105,11 @@ export function emit_server_error(dom_id: string, data: JSON_Response) {
 }
 
 // export function network_error(model_name: string, data: Record<string, any>) { return emit(`network_error ${model_name}`, data); };
-export function emit_network_error(dom_id: string, request: Request_Origin, error: Error) {
-  warn(`!!! Network error for ${dom_id}/${request.action}: ${error.message}`);
+export function emit_network_error(selector: string, request: Request_Origin, error: Error) {
+  warn(`!!! Network error for ${selector}/${request.action}: ${error.message}`);
   warn(error);
 
-  emit('network_error', dom_id, {error, request});
+  emit('network_error', selector, {error, request});
 
-  return css_status('network_error', dom_id);
+  return css_status('network_error', selector);
 } // === function
