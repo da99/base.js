@@ -130,8 +130,9 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
   const raw_action = form_ele.getAttribute('action') || '/';
   const url        = path_to_url(raw_action);
 
+  const selector = `#${form_ele.id}`;
   const request: Request_Origin = {
-    selector : `#${form_ele.id}`,
+    selector,
     action : raw_action,
     do_request: false,
     request  : {
@@ -140,7 +141,7 @@ export function fetch_form(method: string, form_ele: HTMLFormElement, f_data: Re
       referrerPolicy: NO_REFERRER,
       headers: {
         "Content-Type": "application/json",
-        X_SENT_FROM: form_ele.id
+        X_SENT_FROM: selector
       },
       body: JSON.stringify(f_data || {})
     }

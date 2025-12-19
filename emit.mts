@@ -12,14 +12,14 @@ export function emit(event_name: string, selector: string, data: Record<string, 
   const all_event_name = {detail: {dom_id: s_selector, ...data}};
   const main           = {detail: data};
 
-  document.body.dispatchEvent(new CustomEvent(`before`, all));
-  document.body.dispatchEvent(new CustomEvent(`before ${s_event_name}`, all_event_name));
+  document.body.dispatchEvent(new CustomEvent(`before * *`, all));
+  document.body.dispatchEvent(new CustomEvent(`before ${s_event_name} *`, all_event_name));
   document.body.dispatchEvent(new CustomEvent(`before ${s_event_name} ${s_selector}`, main));
   document.body.dispatchEvent(new CustomEvent('*', all));
   const result = document.body.dispatchEvent(new CustomEvent(`${s_event_name} ${s_selector}`, main));
-  document.body.dispatchEvent(new CustomEvent(`after ${s_event_name}`, all_event_name));
+  document.body.dispatchEvent(new CustomEvent(`after ${s_event_name} *`, all_event_name));
   document.body.dispatchEvent(new CustomEvent(`after ${s_event_name} ${s_selector}`, main));
-  document.body.dispatchEvent(new CustomEvent(`after`, all));
+  document.body.dispatchEvent(new CustomEvent(`after * *`, all));
   return result;
 }
 
